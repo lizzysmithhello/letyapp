@@ -1,0 +1,330 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { Plus, User, Trash2, Check, RefreshCw, Sparkles, DollarSign, HelpCircle, PenTool } from 'lucide-react';
+import { WeeklyContributor } from '../types';
+
+interface ContributionsPanelProps {
+  contributors: WeeklyContributor[];
+  onAddContributor: (name: string, weeklyAmount: number) => void;
+  onUpdateContributor: (id: string, updated: Partial<WeeklyContributor>) => void;
+  onDeleteContributor: (id: string) => void;
+  totalPaidServices: number;
+  monthlyBudgetGoal: number; // e.g. $19,800
+}
+
+export default function ContributionsPanel({
+  contributors,
+  onAddContributor,
+  onUpdateContributor,
+  onDeleteContributor,
+  totalPaidServices,
+  monthlyBudgetGoal
+}: ContributionsPanelProps) {
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+
+  // Calculate stats
+  const getContributorMonthTotal = (c: WeeklyContributor) => {
+    let weeksCount = 0;
+    if (c.w1) weeksCount++;
+    if (c.w2) weeksCount++;
+    if (c.w3) weeksCount++;
+    if (c.w4) weeksCount++;
+    return c.weeklyAmount * weeksCount;
+  };
+
+  const totalContributed = contributors.reduce((sum, c) => sum + getContributorMonthTotal(c), 0);
+  const remainingNeeded = monthlyBudgetGoal - totalContributed;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !amount) return;
+    onAddContributor(name.trim(), parseFloat(amount) || 1000);
+    setName('');
+    setAmount('');
+    setShowForm(false);
+  };
+
+  const handleToggleWeek = (id: string, week: 'w1' | 'w2' | 'w3' | 'w4', currentVal: boolean) => {
+    onUpdateContributor(id, { [week]: !currentVal });
+  };
+
+  const handleStartEditAmount = (c: WeeklyContributor) => {
+    setEditingId(c.id);
+    setEditAmount(c.weeklyAmount.toFixed(0));
+  };
+
+  const handleSaveAmount = (id: string) => {
+    const val = parseFloat(editAmount);
+    if (!isNaN(val) && val >= 0) {
+      onUpdateContributor(id, { weeklyAmount: val });
+    }
+    setEditingId(null);
+  };
+
+  return (
+    <div className="bg-white border-2 border-stone-150 rounded-3xl p-5 sm:p-6 shadow-md flex flex-col h-full overflow-hidden relative group/panel">
+      {/* Visual dynamic top indicator for modern vibey look */}
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-violet-500 via-pink-500 to-amber-500" />
+      
+      <div className="flex justify-between items-center mb-5 flex-wrap gap-2">
+        <div>
+          <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2 font-sans tracking-tight">
+            <span className="p-1 px-2.5 rounded-xl bg-violet-100 text-violet-700 text-sm font-black shadow-xs">💸</span>
+            Abonos Semanales al Presupuesto
+          </h2>
+          <p className="text-stone-500 text-xs mt-0.5">Palomea las aportaciones de cada integrante por semana</p>
+        </div>
+        
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all hover:shadow-md cursor-pointer"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          Nuevo Integrante
+        </button>
+      </div>
+
+      {/* Main Budget Progress Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-6">
+        <div className="bg-gradient-to-br from-violet-50/50 to-white border border-violet-100 p-3.5 rounded-2xl">
+          <span className="text-[10px] uppercase font-extrabold text-violet-600 tracking-wider block">Mes Recaudado</span>
+          <span className="text-xl font-mono font-black text-violet-950 block mt-1">
+            ${totalContributed.toLocaleString('es-MX')}
+          </span>
+          <span className="text-[10px] text-stone-500 block mt-1 font-sans">Suma de semanas marcadas</span>
+        </div>
+
+        <div className="bg-stone-50 border border-stone-200/60 p-3.5 rounded-2xl">
+          <span className="text-[10px] uppercase font-extrabold text-stone-500 tracking-wider block">Meta Presupuesto</span>
+          <span className="text-xl font-mono font-black text-stone-800 block mt-1">
+            ${monthlyBudgetGoal.toLocaleString('es-MX')}
+          </span>
+          <span className="text-[10px] text-stone-500 block mt-1 font-sans">Meta editable arriba</span>
+        </div>
+
+        <div className={`p-4 rounded-2xl border ${remainingNeeded <= 0 ? 'bg-emerald-50/70 border-emerald-150 text-emerald-950' : 'bg-amber-50/60 border-amber-200 text-amber-950'}`}>
+          <span className="text-[10px] uppercase font-extrabold tracking-wider block opacity-75">
+            {remainingNeeded <= 0 ? '🎉 Meta Cubierta' : '⚖️ Faltante del Mes'}
+          </span>
+          <span className="text-xl font-mono font-black block mt-1">
+            {remainingNeeded <= 0 ? '$0' : `-$${remainingNeeded.toLocaleString('es-MX')}`}
+          </span>
+          <span className="text-[10px] opacity-75 block mt-1 font-sans">
+            {remainingNeeded <= 0 ? '¡Excelente organización familiar!' : 'Por aportar colectivamente'}
+          </span>
+        </div>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="mb-5 bg-gradient-to-b from-stone-50 to-stone-100 p-4 border border-stone-200/80 rounded-2xl space-y-3 animate-fade-in relative">
+          <h4 className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+            👤 Registrar Nuevo Aportador
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Nombre Completo</label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Tío Alberto, Karla"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-violet-400 font-medium"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Abono Semanal ($)</label>
+              <input
+                type="number"
+                required
+                min="1"
+                placeholder="Ej. 1200"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full text-xs border border-stone-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-violet-400 font-mono font-bold"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-1 border-t border-stone-200/60">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="px-3.5 py-1.5 border border-stone-200 hover:bg-stone-200 rounded-xl text-stone-600 text-xs font-bold cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold cursor-pointer shadow-xs"
+            >
+              Añadir Integrante
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Week Interactive Table */}
+      <div className="flex-1 overflow-x-auto min-w-full">
+        {contributors.length === 0 ? (
+          <div className="text-center py-10 text-stone-400 text-xs italic bg-stone-50 rounded-2xl border border-dashed border-stone-200">
+            No hay integrantes registrados en el abono semanal. ¡Añade uno arriba!
+          </div>
+        ) : (
+          <table className="min-w-full divide-y divide-stone-200/80">
+            <thead>
+              <tr className="text-left text-[10px] font-extrabold text-stone-400 uppercase tracking-widest bg-stone-50/60">
+                <th className="py-2.5 px-3 rounded-l-xl">Integrante</th>
+                <th className="py-2.5 px-2 text-center">Sem 1</th>
+                <th className="py-2.5 px-2 text-center">Sem 2</th>
+                <th className="py-2.5 px-2 text-center">Sem 3</th>
+                <th className="py-2.5 px-2 text-center">Sem 4</th>
+                <th className="py-2.5 px-2 text-right">Monto Semanal</th>
+                <th className="py-2.5 px-3 text-right rounded-r-xl">Aporte Mes</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100 text-stone-800">
+              {contributors.map((c) => {
+                const monthTotal = getContributorMonthTotal(c);
+                return (
+                  <tr key={c.id} className="hover:bg-violet-50/25 transition-colors group">
+                    {/* Name */}
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 px-1.5 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold group-hover:bg-violet-100 transition-colors">👤</span>
+                        <div>
+                          <span className="text-xs font-bold text-stone-900 block">{c.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`¿Quitar a ${c.name} del presupuesto semanal?`)) {
+                                onDeleteContributor(c.id);
+                              }
+                            }}
+                            className="text-[9px] font-semibold text-rose-500 hover:text-rose-700 hidden group-hover:inline-block transition-all mt-0.5"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Week 1 */}
+                    <td className="py-3 px-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleWeek(c.id, 'w1', c.w1)}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-lg border-2 transition-all cursor-pointer ${
+                          c.w1 
+                            ? 'bg-emerald-500 border-emerald-600 text-white shadow-xs' 
+                            : 'border-stone-300 bg-white text-transparent hover:border-violet-400'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </button>
+                    </td>
+
+                    {/* Week 2 */}
+                    <td className="py-3 px-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleWeek(c.id, 'w2', c.w2)}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-lg border-2 transition-all cursor-pointer ${
+                          c.w2 
+                            ? 'bg-emerald-500 border-emerald-600 text-white shadow-xs' 
+                            : 'border-stone-300 bg-white text-transparent hover:border-violet-400'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </button>
+                    </td>
+
+                    {/* Week 3 */}
+                    <td className="py-3 px-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleWeek(c.id, 'w3', c.w3)}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-lg border-2 transition-all cursor-pointer ${
+                          c.w3 
+                            ? 'bg-emerald-500 border-emerald-600 text-white shadow-xs' 
+                            : 'border-stone-300 bg-white text-transparent hover:border-violet-400'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </button>
+                    </td>
+
+                    {/* Week 4 */}
+                    <td className="py-3 px-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleWeek(c.id, 'w4', c.w4)}
+                        className={`inline-flex items-center justify-center w-6 h-6 rounded-lg border-2 transition-all cursor-pointer ${
+                          c.w4 
+                            ? 'bg-emerald-500 border-emerald-600 text-white shadow-xs' 
+                            : 'border-stone-300 bg-white text-transparent hover:border-violet-400'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </button>
+                    </td>
+
+                    {/* Extra / Weekly Amount Inline Editable */}
+                    <td className="py-3 px-2 text-right">
+                      {editingId === c.id ? (
+                        <div className="inline-flex items-center gap-1">
+                          <span className="text-[10px] text-stone-400 font-mono">$</span>
+                          <input
+                            type="number"
+                            required
+                            className="w-16 border-2 border-violet-400 font-mono font-bold text-center text-xs p-0.5 rounded-lg focus:outline-none"
+                            value={editAmount}
+                            onChange={(e) => setEditAmount(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveAmount(c.id)}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveAmount(c.id)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1 group/amt">
+                          <span className="font-mono text-xs font-bold text-stone-700">${c.weeklyAmount.toLocaleString()}</span>
+                          <button
+                            onClick={() => handleStartEditAmount(c)}
+                            className="p-1 px-1.5 text-stone-400 hover:text-violet-600 hover:bg-violet-50 text-[10px] font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
+                            title="Editar monto"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Month Contribution Total calculated dynamically */}
+                    <td className="py-3 px-3 text-right">
+                      <span className="font-mono font-black text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg">
+                        ${monthTotal.toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}

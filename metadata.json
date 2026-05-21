@@ -1,0 +1,6 @@
+{
+  "name": "Lety App",
+  "description": "Administrador del presupuesto familiar, servicios, salud y tareas del hogar en memoria de Leticia Rodríguez Escalante.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
