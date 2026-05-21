@@ -311,7 +311,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <div className="p-3 bg-amber-500/10 border border-amber-200 rounded-2xl text-[10px] text-amber-900 leading-normal flex gap-1.5 font-medium">
             <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <strong>Acceso rápido demo:</strong> Registra cualquier correo ficticio, o usa Google Gmail para loguearte con un solo click. ¡La sesión se guarda para siempre!
+              <strong>Acceso rápido demo:</strong> Registra o inicia sesión con cualquier correo. Recuerda que <strong>solo el usuario Ericka</strong> (puedes registrarte con este nombre o simular el inicio con Google) tiene permisos para editar parámetros del presupuesto y modificar las frases de mamá en la pestaña de Presupuesto.
             </div>
           </div>
         </div>

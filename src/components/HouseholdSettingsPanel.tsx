@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Settings, Save, RefreshCw, CheckCircle, MessageSquarePlus, Trash2, Heart, ShieldAlert } from 'lucide-react';
+import { Settings, Save, RefreshCw, CheckCircle, Lock } from 'lucide-react';
 
 interface HouseholdSettingsPanelProps {
   grandmaName: string;
@@ -34,11 +34,8 @@ interface HouseholdSettingsPanelProps {
   gasAverage: number;
   setGasAverage: (val: number) => void;
 
-  // Mom Modern Phrases states and setter
-  momAdvices: string[];
-  setMomAdvices: (val: string[]) => void;
-
   onResetDefaults: () => void;
+  currentUser?: { name: string; email: string; avatarUrl: string; provider: 'email' | 'google' } | null;
 }
 
 export default function HouseholdSettingsPanel({
@@ -64,12 +61,13 @@ export default function HouseholdSettingsPanel({
   setAguaAverage,
   gasAverage,
   setGasAverage,
-  momAdvices,
-  setMomAdvices,
-  onResetDefaults
+  onResetDefaults,
+  currentUser
 }: HouseholdSettingsPanelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const canEdit = currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
   
   // Local state for temporary inputs
   const [tempGrName, setTempGrName] = useState(grandmaName);
@@ -83,9 +81,6 @@ export default function HouseholdSettingsPanel({
   const [tempBasics, setTempBasics] = useState(basicsBudget.toString());
   const [tempSavings, setTempSavings] = useState(savingsAlloc.toString());
   const [tempTransport, setTempTransport] = useState(transportBudget.toString());
-
-  // Modern Phrases text box state
-  const [newPhraseInput, setNewPhraseInput] = useState('');
 
   const handleStartEdit = () => {
     setTempGrName(grandmaName);
@@ -130,21 +125,6 @@ export default function HouseholdSettingsPanel({
     }
   };
 
-  // Add / Delete mother phrase logic
-  const handleAddPhrase = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPhraseInput.trim()) return;
-    setMomAdvices([...momAdvices, newPhraseInput.trim()]);
-    setNewPhraseInput('');
-    setSuccessMsg('¡Frase de mamá guardada con éxito!');
-    setTimeout(() => setSuccessMsg(''), 3000);
-  };
-
-  const handleDeletePhrase = (indexToDelete: number) => {
-    const updated = momAdvices.filter((_, idx) => idx !== indexToDelete);
-    setMomAdvices(updated);
-  };
-
   // Live Math calculations
   const currIncome = isEditing ? (parseFloat(tempIncome) || 0) : monthlyIncome;
   const currRent = isEditing ? (parseFloat(tempRent) || 0) : rentAverage;
@@ -173,29 +153,36 @@ export default function HouseholdSettingsPanel({
           </div>
           <div>
             <h3 className="text-lg font-bold text-stone-900 tracking-tight">
-              ⚙️ Configurador del Hogar & Frases de Mamá
+              ⚙️ Configurador de Parámetros del Hogar
             </h3>
-            <p className="text-xs text-stone-500 mt-0.5">Define los presupuestos base, reparaciones y el nombre de la abuela</p>
+            <p className="text-xs text-stone-500 mt-0.5">Define los presupuestos base, reparaciones y fijos de casa</p>
           </div>
         </div>
 
         <div className="flex gap-2">
-          {!isEditing ? (
-            <button
-              onClick={handleStartEdit}
-              className="px-3.5 py-1.5 text-xs font-bold bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl border border-violet-100 transition duration-150 cursor-pointer flex items-center gap-1.5"
-            >
-              📝 Editar Parámetros
-            </button>
+          {canEdit ? (
+            !isEditing ? (
+              <button
+                onClick={handleStartEdit}
+                className="px-3.5 py-1.5 text-xs font-bold bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl border border-violet-100 transition duration-150 cursor-pointer flex items-center gap-1.5"
+              >
+                📝 Editar Parámetros
+              </button>
+            ) : (
+              <button
+                onClick={handleResetClick}
+                type="button"
+                className="px-2.5 py-1.5 text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl border border-stone-200 transition duration-150 flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Reestablecer
+              </button>
+            )
           ) : (
-            <button
-              onClick={handleResetClick}
-              type="button"
-              className="px-2.5 py-1.5 text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl border border-stone-200 transition duration-150 flex items-center gap-1 cursor-pointer"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Reestablecer
-            </button>
+            <div className="px-3 py-1.5 text-xs font-bold bg-stone-100/80 text-stone-600 rounded-xl border border-stone-200 flex items-center gap-1.5 shadow-3sx select-none">
+              <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Solo Ericka puede editar</span>
+            </div>
           )}
         </div>
       </div>
@@ -250,67 +237,70 @@ export default function HouseholdSettingsPanel({
         </div>
       </div>
 
-      {/* TWO COLUMNS: PARAMS & PHRASES WRAPPER */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        
-        {/* COL 1: SETTINGS VIEW / FORM */}
-        <div className="bg-stone-50/50 p-4 border border-stone-150 rounded-2xl">
+      {/* SINGLE COLUMN FOR CONFIG */}
+      <div className="w-full">
+        <div className="bg-stone-50/50 p-5 border border-stone-150 rounded-2xl">
           {!isEditing ? (
-            <div className="space-y-3.5 text-xs">
-              <h4 className="font-extrabold text-[10px] uppercase text-stone-400 tracking-widest border-b border-stone-200 pb-1.5 flex justify-between">
+            <div className="space-y-4 text-xs">
+              <h4 className="font-extrabold text-[10px] uppercase text-stone-400 tracking-widest border-b border-stone-200 pb-2 flex justify-between">
                 <span>Canasta Básica y Fijos del PDF</span>
-                <span className="text-stone-500 font-sans italic not-case font-normal lowercase">(Nombre de abuela eliminado aquí)</span>
+                <span className="text-stone-500 font-sans italic not-case font-normal lowercase">(Nombre de abuela se gestiona en su módulo)</span>
               </h4>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Alimentación (6 personas):</span>
-                <strong className="text-stone-800 font-mono font-bold">${foodBudget.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Básicos del hogar (Artículos de limpieza):</span>
-                <strong className="text-stone-800 font-mono font-bold">${basicsBudget.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Guardadito para imprevistos / emergencias:</span>
-                <strong className="text-emerald-700 font-mono font-bold">${savingsAlloc.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium font-medium">Transporte y extras mínimos:</span>
-                <strong className="text-stone-800 font-mono font-bold">${transportBudget.toLocaleString()} MXN</strong>
-              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Alimentación Mensual (6 personas):</span>
+                    <strong className="text-stone-850 font-mono">${foodBudget.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Básicos del hogar / Limpieza:</span>
+                    <strong className="text-stone-850 font-mono">${basicsBudget.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Guardadito para imprevistos / emergencias:</span>
+                    <strong className="text-emerald-700 font-mono">${savingsAlloc.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-stone-500 font-medium">Transporte y extras mínimos:</span>
+                    <strong className="text-stone-850 font-mono">${transportBudget.toLocaleString()} MXN</strong>
+                  </div>
+                </div>
 
-              <h4 className="font-extrabold text-[10px] uppercase text-stone-400 tracking-widest border-b border-stone-200 pt-2.5 pb-1.5">Costos de Vivienda & Servicios (Aproximación Mensual)</h4>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Renta Mensual Fija:</span>
-                <strong className="text-stone-800 font-mono font-semibold">${rentAverage.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Internet / Cable Izzi:</span>
-                <strong className="text-stone-800 font-mono font-semibold">${izziAverage.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Luz Promedio (CFE Bimestral prorrateada):</span>
-                <strong className="text-stone-800 font-mono font-semibold">${luzAverage.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Agua Potable (Prorrateada al mes):</span>
-                <strong className="text-stone-800 font-mono font-semibold">${aguaAverage.toLocaleString()} MXN</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Gas L.P. promedio mensual:</span>
-                <strong className="text-stone-800 font-mono font-semibold">${gasAverage.toLocaleString()} MXN</strong>
+                <div className="space-y-2.5 border-t md:border-t-0 md:border-l md:pl-6 border-stone-100 pt-3 md:pt-0">
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium font-sans">Renta Mensual Fija Vivienda:</span>
+                    <strong className="text-stone-850 font-mono">${rentAverage.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Internet / Cable Izzi:</span>
+                    <strong className="text-stone-850 font-mono">${izziAverage.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Luz Promedio (CFE Bimestral prorrateada):</span>
+                    <strong className="text-stone-850 font-mono">${luzAverage.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
+                    <span className="text-stone-500 font-medium">Agua Potable (Prorrateada al mes):</span>
+                    <strong className="text-stone-850 font-mono">${aguaAverage.toLocaleString()} MXN</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-stone-500 font-medium">Gas L.P. promedio mensual:</span>
+                    <strong className="text-stone-850 font-mono">${gasAverage.toLocaleString()} MXN</strong>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSave} className="space-y-4 text-xs animate-fade-in">
-              <div className="flex justify-between items-center border-b border-stone-200 pb-1.5">
-                <h4 className="font-bold text-stone-800">Modificar Valores Familiares</h4>
-                <span className="text-[9px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">Editar modo activo</span>
-              </div>
+            <form onSubmit={handleSave} className="space-y-4">
+              <h4 className="text-xs font-black text-indigo-900 uppercase tracking-wider border-b border-indigo-100 pb-1.5">
+                ✏️ Editar Parámetros Recomendados de Presupuestos
+              </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Inputs de Dinero base */}
-                <div className="space-y-3">
-                  <h5 className="font-black text-[9px] uppercase text-stone-400 tracking-wider">Presupuesto y Canasta</h5>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Bloque 1 */}
+                <div className="space-y-3 p-3 bg-stone-100/40 rounded-xl border border-stone-100">
+                  <h5 className="font-black text-[9px] uppercase text-stone-400 tracking-wider">Ingresos y Estructura</h5>
                   <div>
                     <label className="block text-stone-500 font-semibold mb-0.5">Nombre de la Abuela</label>
                     <input
@@ -318,55 +308,60 @@ export default function HouseholdSettingsPanel({
                       required
                       value={tempGrName}
                       onChange={(e) => setTempGrName(e.target.value)}
-                      className="w-full text-xs font-bold border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
+                      className="w-full text-xs font-medium border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Presupuesto Total al Mes ($)</label>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Presupuesto Ingresado Mensual ($)</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={tempIncome}
                       onChange={(e) => setTempIncome(e.target.value)}
-                      className="w-full text-xs font-mono font-bold border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
                     />
                   </div>
+                </div>
+
+                {/* Bloque 2 */}
+                <div className="space-y-3 p-3 bg-stone-100/40 rounded-xl border border-stone-100">
+                  <h5 className="font-black text-[9px] uppercase text-stone-400 tracking-wider">Canasta de Gastos ($)</h5>
                   <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Total Comida 6 Personas ($)</label>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Alimentación Mensual (6p)</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={tempFood}
                       onChange={(e) => setTempFood(e.target.value)}
-                      className="w-full text-xs font-mono font-bold border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Básicos del hogar ($)</label>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Básicos de limpieza</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={tempBasics}
                       onChange={(e) => setTempBasics(e.target.value)}
-                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Guardadito imprevistos ($)</label>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Guardadito imprevistos</label>
                     <input
                       type="number"
                       required
                       min="0"
                       value={tempSavings}
                       onChange={(e) => setTempSavings(e.target.value)}
-                      className="w-full text-xs font-mono text-emerald-800 font-bold border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:border-indigo-400"
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white font-bold text-emerald-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Transporte y extras mínimos ($)</label>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Transporte y extras mínimos</label>
                     <input
                       type="number"
                       required
@@ -378,8 +373,8 @@ export default function HouseholdSettingsPanel({
                   </div>
                 </div>
 
-                {/* Inputs de Servicios fijos */}
-                <div className="space-y-3">
+                {/* Bloque 3 */}
+                <div className="space-y-3 p-3 bg-stone-100/40 rounded-xl border border-stone-100">
                   <h5 className="font-black text-[9px] uppercase text-stone-400 tracking-wider">Servicios Vivienda ($)</h5>
                   <div>
                     <label className="block text-stone-500 font-semibold mb-0.5">Renta Fija Mensual</label>
@@ -458,73 +453,7 @@ export default function HouseholdSettingsPanel({
             </form>
           )}
         </div>
-
-        {/* COL 2: FRASES DE MAMÁ MODERNA WRAPPER (EDITABLE LIST) */}
-        <div className="bg-rose-50/20 p-4 border border-rose-100 rounded-2xl">
-          <div className="flex justify-between items-center border-b border-rose-200 pb-2 mb-3">
-            <h4 className="text-xs font-bold text-rose-950 flex items-center gap-1.5">
-              <span>🤱💬</span> Frases de Mamá Lety (Modificables)
-            </h4>
-            <span className="text-[9px] bg-rose-200/50 text-rose-800 font-black px-1.5 py-0.5 rounded uppercase">Modernas y Directas</span>
-          </div>
-
-          <form onSubmit={handleAddPhrase} className="flex gap-2 mb-3">
-            <input
-              type="text"
-              required
-              placeholder="Añade nueva frase: Ej. ¡Ese ventilador consume mucha luz!"
-              value={newPhraseInput}
-              onChange={(e) => setNewPhraseInput(e.target.value)}
-              className="flex-1 text-xs border border-rose-200 rounded-xl px-2.5 py-2 bg-white focus:outline-none focus:border-rose-400 font-medium"
-            />
-            <button
-              type="submit"
-              className="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <MessageSquarePlus className="w-4 h-4 shrink-0" />
-              <span>Agregar</span>
-            </button>
-          </form>
-
-          {/* Render and Delete Phrases */}
-          <div className="space-y-2 max-h-[290px] overflow-y-auto pr-1">
-            {momAdvices.length === 0 ? (
-              <p className="text-stone-400 text-center py-6 italic text-[11px]">
-                No hay frases cargadas. ¡Mamá se quedó muda! Añade una arriba.
-              </p>
-            ) : (
-              momAdvices.map((phrase, idx) => (
-                <div 
-                  key={idx}
-                  className="group flex justify-between items-center p-2.5 bg-white border border-rose-100 hover:border-rose-300 rounded-xl transition-all"
-                >
-                  <span className="text-[11px] font-semibold text-rose-950 pr-2 leading-relaxed">
-                    🗣️ "{phrase}"
-                  </span>
-                  
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePhrase(idx)}
-                    className="p-1 text-rose-300 hover:text-red-600 rounded-md hover:bg-rose-50 cursor-pointer"
-                    title="Eliminar frase"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="mt-3.5 p-2 bg-rose-100/45 border border-rose-200 rounded-xl text-[10px] text-rose-950 flex gap-2 leading-relaxed italic">
-            <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            <span>
-              Estas ingeniosas frases de mamá moderna se seleccionan aleatoriamente cada hora y aparecen como los globos de consejos en el cabezal de tu app. Las puedes desactivar o re-escribir como prefieras.
-            </span>
-          </div>
-        </div>
-
       </div>
-
     </div>
   );
 }

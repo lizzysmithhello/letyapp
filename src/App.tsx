@@ -59,6 +59,7 @@ import HealthPanel from './components/HealthPanel';
 import SavingsPanel from './components/SavingsPanel';
 import FamilySection from './components/FamilySection';
 import LoginScreen from './components/LoginScreen';
+import UserProfileAndSettings from './components/UserProfileAndSettings';
 
 type TabID = 'panorama' | 'finances' | 'shopping' | 'health' | 'savings' | 'family' | 'profile';
 
@@ -68,6 +69,8 @@ export default function App() {
   // ---------------------------------------------------------------------------
   const [activeTab, setActiveTab] = useState<TabID>('panorama');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [activeProfileSubTab, setActiveProfileSubTab] = useState<'perfil' | 'frases' | 'cumpleanos'>('perfil');
 
   // --- AUTHENTICATION STATE ---
   const [currentUser, setCurrentUser] = useState<{ email: string; name: string; avatarUrl: string; provider: 'email' | 'google' } | null>(() => {
@@ -729,21 +732,81 @@ export default function App() {
               Caja: <strong className="text-emerald-400 font-extrabold">${familyCashBalance.toLocaleString()} MXN</strong>
             </span>
             {currentUser && (
-              <button
-                onClick={() => setActiveTab('profile')}
-                className="flex items-center gap-2 hover:bg-stone-800/80 rounded-xl p-1 px-2 transition duration-150 border border-transparent hover:border-stone-750 cursor-pointer"
-                title="Configuración de Perfil"
-              >
-                <img 
-                  src={currentUser.avatarUrl} 
-                  alt={currentUser.name} 
-                  className="w-7 h-7 rounded-full border border-pink-500/50 object-cover bg-stone-850 shrink-0" 
-                  referrerPolicy="no-referrer"
-                />
-                <span className="text-xs font-black text-rose-100 hidden md:inline truncate max-w-[100px]">
-                  {currentUser.name.split(' ')[0]}
-                </span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 hover:bg-stone-800/80 rounded-xl p-1 px-2 transition duration-150 border border-transparent hover:border-stone-750 cursor-pointer text-left"
+                  title="Configuración de Perfil"
+                >
+                  <img 
+                    src={currentUser.avatarUrl} 
+                    alt={currentUser.name} 
+                    className="w-7 h-7 rounded-full border border-pink-500/50 object-cover bg-stone-850 shrink-0" 
+                    referrerPolicy="no-referrer"
+                  />
+                  <span className="text-xs font-black text-rose-100 hidden md:inline truncate max-w-[100px]">
+                    {currentUser.name.split(' ')[0]}
+                  </span>
+                  <span className="text-[10px] text-stone-400 select-none">▼</span>
+                </button>
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-stone-200/95 rounded-2xl shadow-xl z-50 p-2 space-y-1 text-left animate-feed-in">
+                    <div className="px-3 py-1.5 border-b border-stone-100 mb-1">
+                      <p className="text-[9px] font-black uppercase text-stone-400 font-mono">Lety App v3</p>
+                      <p className="text-xs font-serif font-black text-stone-800 truncate">{currentUser.name}</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setActiveTab('profile');
+                        setActiveProfileSubTab('perfil');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-stone-700 hover:text-black hover:bg-stone-100/80 rounded-xl text-xs font-bold font-sans flex items-center gap-2 cursor-pointer transition"
+                    >
+                      <span>👤</span>
+                      <span>Perfil de Cuenta</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab('profile');
+                        setActiveProfileSubTab('frases');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-stone-700 hover:text-black hover:bg-rose-50 rounded-xl text-xs font-bold font-sans flex items-center gap-2 cursor-pointer transition"
+                    >
+                      <span>💬</span>
+                      <span>Frases de Lety</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab('profile');
+                        setActiveProfileSubTab('cumpleanos');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-stone-700 hover:text-black hover:bg-indigo-50 rounded-xl text-xs font-bold font-sans flex items-center gap-2 cursor-pointer transition"
+                    >
+                      <span>📅</span>
+                      <span>Ajustes de Cumpleaños</span>
+                    </button>
+
+                    <div className="border-t border-stone-100 my-1 pt-1">
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setProfileDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-red-650 hover:text-red-700 hover:bg-rose-50/50 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition"
+                      >
+                        <span>🚪</span>
+                        <span>Cerrar Sesión</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -1075,6 +1138,34 @@ export default function App() {
          * --------------------------------------------------------------------------- */}
         {activeTab === 'finances' && (
           <div className="space-y-6 animate-fade-in">
+            {/* HOUSEHOLD SETTINGS & CONFIGURATOR PANEL */}
+            <HouseholdSettingsPanel
+              grandmaName={grandmaName}
+              setGrandmaName={setGrandmaName}
+              monthlyIncome={monthlyIncome}
+              setMonthlyIncome={setMonthlyIncome}
+              foodBudget={foodBudget}
+              setFoodBudget={setFoodBudget}
+              basicsBudget={basicsBudget}
+              setBasicsBudget={setBasicsBudget}
+              savingsAlloc={savingsAlloc}
+              setSavingsAlloc={setSavingsAlloc}
+              transportBudget={transportBudget}
+              setTransportBudget={setTransportBudget}
+              rentAverage={rentAverage}
+              setRentAverage={setRentAverage}
+              izziAverage={izziAverage}
+              setIzziAverage={setIzziAverage}
+              luzAverage={luzAverage}
+              setLuzAverage={setLuzAverage}
+              aguaAverage={aguaAverage}
+              setAguaAverage={setAguaAverage}
+              gasAverage={gasAverage}
+              setGasAverage={setGasAverage}
+              onResetDefaults={handleResetDefaults}
+              currentUser={currentUser}
+            />
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-12">
                 <div className="border border-stone-150 rounded-2xl p-4 bg-rose-50/20 text-rose-950 font-serif text-xs italic">
@@ -1167,72 +1258,16 @@ export default function App() {
          * TAB 7: USER PROFILE & HOUSEHOLD CONFIGURATOR (PERFIL & AJUSTES)
          * --------------------------------------------------------------------------- */}
         {activeTab === 'profile' && (
-          <div className="space-y-6 animate-fade-in animate-duration-300">
-            {/* User Profile Card */}
-            <div className="bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-rose-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none animate-pulse" />
-              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-black/15 rounded-full blur-xl pointer-events-none" />
-              
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 relative z-10">
-                <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                  <img 
-                    src={currentUser?.avatarUrl} 
-                    alt={currentUser?.name} 
-                    className="w-20 h-20 rounded-full border-4 border-white/50 shadow-md bg-stone-900 object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div>
-                    <span className="text-[10px] uppercase font-black tracking-widest bg-white/20 px-3 py-1 rounded-full text-white inline-block">
-                      {currentUser?.provider === 'google' ? '🟢 Conectado con Google' : '📧 Cuenta de Correo'}
-                    </span>
-                    <h2 className="text-2xl font-serif font-black mt-2 leading-tight">
-                      Hola, {currentUser?.name}
-                    </h2>
-                    <p className="text-rose-100 text-xs mt-0.5 font-medium">{currentUser?.email}</p>
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-auto shrink-0">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full sm:w-auto px-5 py-3 bg-white/15 hover:bg-white/25 active:bg-white/35 text-white text-xs font-black rounded-xl border border-white/20 transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <LogOut className="w-4 h-4 shrink-0" />
-                    <span>Cerrar Sesión</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Household Configurator */}
-            <HouseholdSettingsPanel
-              grandmaName={grandmaName}
-              setGrandmaName={setGrandmaName}
-              monthlyIncome={monthlyIncome}
-              setMonthlyIncome={setMonthlyIncome}
-              foodBudget={foodBudget}
-              setFoodBudget={setFoodBudget}
-              basicsBudget={basicsBudget}
-              setBasicsBudget={setBasicsBudget}
-              savingsAlloc={savingsAlloc}
-              setSavingsAlloc={setSavingsAlloc}
-              transportBudget={transportBudget}
-              setTransportBudget={setTransportBudget}
-              rentAverage={rentAverage}
-              setRentAverage={setRentAverage}
-              izziAverage={izziAverage}
-              setIzziAverage={setIzziAverage}
-              luzAverage={luzAverage}
-              setLuzAverage={setLuzAverage}
-              aguaAverage={aguaAverage}
-              setAguaAverage={setAguaAverage}
-              gasAverage={gasAverage}
-              setGasAverage={setGasAverage}
-              momAdvices={momAdvices}
-              setMomAdvices={setMomAdvices}
-              onResetDefaults={handleResetDefaults}
-            />
-          </div>
+          <UserProfileAndSettings
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            momAdvices={momAdvices}
+            setMomAdvices={setMomAdvices}
+            birthdays={birthdays}
+            onAddBirthday={handleAddBirthday}
+            onDeleteBirthday={handleDeleteBirthday}
+            initialSection={activeProfileSubTab}
+          />
         )}
       </main>
 
