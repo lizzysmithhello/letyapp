@@ -185,11 +185,11 @@ export default function App() {
   });
 
   const [savings, setSavings] = useState<SavingsProgress>(() => {
-    const saved = localStorage.getItem('lety_savings_v2'); // upgraded key to fit exact requested savings goal
+    const saved = localStorage.getItem('lety_savings_v3');
     return saved ? JSON.parse(saved) : { 
-      currentSavings: 1500, 
-      goalAmount: 18000, 
-      goalName: 'Guardadito de imperfectos y reparaciones del hogar 🏡🛠️' 
+      currentSavings: 0, 
+      goalAmount: 15000, 
+      goalName: 'Guardadito de imperfectos y reparaciones del hogar' 
     };
   });
 
@@ -254,7 +254,7 @@ export default function App() {
   }, [bloodPressureReadings]);
 
   useEffect(() => {
-    localStorage.setItem('lety_savings', JSON.stringify(savings));
+    localStorage.setItem('lety_savings_v3', JSON.stringify(savings));
   }, [savings]);
 
   useEffect(() => {

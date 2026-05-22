@@ -341,26 +341,30 @@ export default function ContributionsPanel({
                               ✏️ <span className="hidden md:inline">Editar</span>
                             </button>
                              {deleteConfirmId === c.id ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  onDeleteContributor(c.id);
-                                  setDeleteConfirmId(null);
-                                }}
-                                className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-600 text-white rounded-lg cursor-pointer transition flex items-center gap-1 animate-pulse"
-                                title="Confirmar remoción"
-                              >
-                                ⚠️ <span>Confirmar</span>
-                              </button>
+                              <div className="flex items-center gap-1 md:gap-1.5 bg-rose-50 border border-rose-200/60 p-1 rounded-xl animate-fade-in shrink-0">
+                                <span className="text-[9px] font-bold text-rose-800 px-1">¿Quitar?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onDeleteContributor(c.id);
+                                    setDeleteConfirmId(null);
+                                  }}
+                                  className="px-2 py-0.5 text-[9px] font-black uppercase bg-rose-600 hover:bg-rose-700 text-white rounded-lg cursor-pointer transition-colors"
+                                >
+                                  Sí
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                  className="px-2 py-0.5 text-[9px] font-black uppercase bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg cursor-pointer transition-colors"
+                                >
+                                  No
+                                </button>
+                              </div>
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setDeleteConfirmId(c.id);
-                                  setTimeout(() => {
-                                    setDeleteConfirmId(prev => prev === c.id ? null : prev);
-                                  }, 4000);
-                                }}
+                                onClick={() => setDeleteConfirmId(c.id)}
                                 className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
                                 title="Eliminar integrante"
                               >
