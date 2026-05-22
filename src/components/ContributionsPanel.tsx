@@ -30,6 +30,7 @@ export default function ContributionsPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editAmount, setEditAmount] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Calculate stats
   const getContributorMonthTotal = (c: WeeklyContributor) => {
@@ -339,18 +340,33 @@ export default function ContributionsPanel({
                             >
                               ✏️ <span className="hidden md:inline">Editar</span>
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (window.confirm(`¿Quitar a ${c.name} del presupuesto semanal?`)) {
+                             {deleteConfirmId === c.id ? (
+                              <button
+                                type="button"
+                                onClick={() => {
                                   onDeleteContributor(c.id);
-                                }
-                              }}
-                              className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
-                              title="Eliminar integrante"
-                            >
-                              🗑️ <span className="hidden md:inline">Quitar</span>
-                            </button>
+                                  setDeleteConfirmId(null);
+                                }}
+                                className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-600 text-white rounded-lg cursor-pointer transition flex items-center gap-1 animate-pulse"
+                                title="Confirmar remoción"
+                              >
+                                ⚠️ <span>Confirmar</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeleteConfirmId(c.id);
+                                  setTimeout(() => {
+                                    setDeleteConfirmId(prev => prev === c.id ? null : prev);
+                                  }, 4000);
+                                }}
+                                className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
+                                title="Eliminar integrante"
+                              >
+                                🗑️ <span className="hidden md:inline">Quitar</span>
+                              </button>
+                            )}
                           </>
                         )}
                       </div>

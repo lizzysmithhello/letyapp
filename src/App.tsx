@@ -57,6 +57,7 @@ import TributeHeader from './components/TributeHeader';
 import HouseholdSettingsPanel from './components/HouseholdSettingsPanel';
 import ContributionsPanel from './components/ContributionsPanel';
 import ServicesPanel from './components/ServicesPanel';
+import RentPanel from './components/RentPanel';
 import ShoppingPanel from './components/ShoppingPanel';
 import HealthPanel from './components/HealthPanel';
 import SavingsPanel from './components/SavingsPanel';
@@ -212,9 +213,18 @@ export default function App() {
     return saved ? parseInt(saved) : 0;
   });
 
+  const [rentStates, setRentStates] = useState(() => {
+    const saved = localStorage.getItem('lety_rent_states_v2');
+    return saved ? JSON.parse(saved) : { israel: false, ericka: false, grandma: false };
+  });
+
   // ---------------------------------------------------------------------------
   // SYNCHRONIZATION WITH LOCALSTORAGE
   // ---------------------------------------------------------------------------
+  useEffect(() => {
+    localStorage.setItem('lety_rent_states_v2', JSON.stringify(rentStates));
+  }, [rentStates]);
+
   useEffect(() => {
     localStorage.setItem('lety_services', JSON.stringify(services));
   }, [services]);
@@ -357,6 +367,13 @@ export default function App() {
 
   const handleDeleteContributor = (id: string) => {
     setContributors(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleToggleRent = (person: 'israel' | 'ericka' | 'grandma') => {
+    setRentStates(prev => ({
+      ...prev,
+      [person]: !prev[person]
+    }));
   };
 
   // SERVICES
@@ -1265,10 +1282,18 @@ export default function App() {
                   monthlyBudgetGoal={monthlyIncome}
                 />
               </div>
+
+              <div className="lg:col-span-3 h-full">
+                <RentPanel 
+                  rentStates={rentStates}
+                  onToggleRent={handleToggleRent}
+                  monthlyBudgetGoal={monthlyIncome}
+                />
+              </div>
               
-              <div className="lg:col-span-7 h-full">
+              <div className="lg:col-span-4 h-full">
                 <ServicesPanel 
-                  services={services}
+                  services={services.filter(s => s.name?.toLowerCase() !== 'renta mensual' && s.name?.toLowerCase() !== 'renta')}
                   onAddService={handleAddService}
                   onToggleServicePaid={handleToggleServicePaid}
                   onDeleteService={handleDeleteService}

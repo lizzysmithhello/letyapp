@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, RefreshCw, Sparkles, Quote, Calendar, Star } from 'lucide-react';
 
 export interface TributeHeaderProps {
@@ -20,9 +20,12 @@ export default function TributeHeader({ momAdvices = [] }: TributeHeaderProps) {
     "Bien que lo decía Pérez Chowel"
   ];
 
-  const rotateAdvice = () => {
-    setAdviceIndex((prev) => (prev + 1) % advicesToUse.length);
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAdviceIndex((prev) => (prev + 1) % advicesToUse.length);
+    }, 60000); // 60,000 milisegundos = 1 minuto
+    return () => clearInterval(interval);
+  }, [advicesToUse.length]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white bg-white/70 backdrop-blur-md p-6 sm:p-8 shadow-xl shadow-pink-500/5 mb-8 group transition-all duration-300 hover:shadow-pink-500/10">
@@ -108,7 +111,7 @@ export default function TributeHeader({ momAdvices = [] }: TributeHeaderProps) {
               </span>
             </div>
 
-            <div className="flex gap-3.5 items-start pl-1 pr-20">
+            <div className="flex gap-3.5 items-start pl-1 pr-4">
               <Quote className="w-8 h-8 text-rose-500/25 shrink-0 -mt-1 transform -scale-x-100" />
               <div>
                 <p className="text-xs sm:text-sm font-serif italic text-stone-850 leading-relaxed text-left font-bold border-l-2 border-rose-500/30 pl-3">
@@ -116,16 +119,6 @@ export default function TributeHeader({ momAdvices = [] }: TributeHeaderProps) {
                 </p>
               </div>
             </div>
-
-            {/* Siguiente apapacho trigger */}
-            <button
-              onClick={rotateAdvice}
-              className="absolute right-3 bottom-3 flex items-center gap-1.5 text-[10px] uppercase font-black tracking-wider text-rose-600 hover:text-rose-800 bg-white hover:bg-rose-50 border-2 border-rose-100 px-3 py-1.5 rounded-xl shadow-xs transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-              title="Escuchar otro consejo de Mamá"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-rose-500 animate-spin-slow" />
-              <span>Siguiente apapacho</span>
-            </button>
           </div>
 
         </div>
