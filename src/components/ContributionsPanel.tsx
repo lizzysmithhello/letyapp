@@ -28,6 +28,7 @@ export default function ContributionsPanel({
   const [amount, setAmount] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
   const [editAmount, setEditAmount] = useState('');
 
   // Calculate stats
@@ -56,15 +57,16 @@ export default function ContributionsPanel({
     onUpdateContributor(id, { [week]: !currentVal });
   };
 
-  const handleStartEditAmount = (c: WeeklyContributor) => {
+  const handleStartEdit = (c: WeeklyContributor) => {
     setEditingId(c.id);
-    setEditAmount(c.weeklyAmount.toFixed(0));
+    setEditName(c.name);
+    setEditAmount(c.weeklyAmount.toString());
   };
 
-  const handleSaveAmount = (id: string) => {
+  const handleSave = (id: string) => {
     const val = parseFloat(editAmount);
-    if (!isNaN(val) && val >= 0) {
-      onUpdateContributor(id, { weeklyAmount: val });
+    if (editName.trim() && !isNaN(val) && val >= 0) {
+      onUpdateContributor(id, { name: editName.trim(), weeklyAmount: val });
     }
     setEditingId(null);
   };
@@ -187,37 +189,38 @@ export default function ContributionsPanel({
                 <th className="py-2.5 px-2 text-center">Sem 3</th>
                 <th className="py-2.5 px-2 text-center">Sem 4</th>
                 <th className="py-2.5 px-2 text-right">Monto Semanal</th>
-                <th className="py-2.5 px-3 text-right rounded-r-xl">Aporte Mes</th>
+                <th className="py-2.5 px-3 text-right">Aporte Mes</th>
+                <th className="py-2.5 px-3 text-center rounded-r-xl w-36">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-stone-800">
               {contributors.map((c) => {
                 const monthTotal = getContributorMonthTotal(c);
+                const isEditing = editingId === c.id;
                 return (
-                  <tr key={c.id} className="hover:bg-violet-50/25 transition-colors group">
+                  <tr key={c.id} className={`transition-colors ${isEditing ? 'bg-violet-50/40' : 'hover:bg-violet-50/20'}`}>
                     {/* Name */}
-                    <td className="py-3 px-3">
+                    <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <span className="p-1 px-1.5 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold group-hover:bg-violet-100 transition-colors">👤</span>
-                        <div>
+                        <span className="p-1 px-1.5 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold">👤</span>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            required
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="bg-white border-2 border-violet-400 focus:outline-none rounded-lg text-xs font-bold px-2 py-1 max-w-[140px]"
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave(c.id)}
+                            autoFocus
+                          />
+                        ) : (
                           <span className="text-xs font-bold text-stone-900 block">{c.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`¿Quitar a ${c.name} del presupuesto semanal?`)) {
-                                onDeleteContributor(c.id);
-                              }
-                            }}
-                            className="text-[9px] font-semibold text-rose-500 hover:text-rose-700 hidden group-hover:inline-block transition-all mt-0.5"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
+                        )}
                       </div>
                     </td>
 
                     {/* Week 1 */}
-                    <td className="py-3 px-2 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleWeek(c.id, 'w1', c.w1)}
@@ -232,7 +235,7 @@ export default function ContributionsPanel({
                     </td>
 
                     {/* Week 2 */}
-                    <td className="py-3 px-2 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleWeek(c.id, 'w2', c.w2)}
@@ -247,7 +250,7 @@ export default function ContributionsPanel({
                     </td>
 
                     {/* Week 3 */}
-                    <td className="py-3 px-2 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleWeek(c.id, 'w3', c.w3)}
@@ -262,7 +265,7 @@ export default function ContributionsPanel({
                     </td>
 
                     {/* Week 4 */}
-                    <td className="py-3 px-2 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       <button
                         type="button"
                         onClick={() => handleToggleWeek(c.id, 'w4', c.w4)}
@@ -276,47 +279,81 @@ export default function ContributionsPanel({
                       </button>
                     </td>
 
-                    {/* Extra / Weekly Amount Inline Editable */}
-                    <td className="py-3 px-2 text-right">
-                      {editingId === c.id ? (
-                        <div className="inline-flex items-center gap-1">
+                    {/* Weekly Amount */}
+                    <td className="py-2.5 px-2 text-right">
+                      {isEditing ? (
+                        <div className="inline-flex items-center gap-1 justify-end">
                           <span className="text-[10px] text-stone-400 font-mono">$</span>
                           <input
                             type="number"
                             required
-                            className="w-16 border-2 border-violet-400 font-mono font-bold text-center text-xs p-0.5 rounded-lg focus:outline-none"
+                            min="0"
+                            className="w-20 border-2 border-violet-400 font-mono font-bold text-center text-xs p-1 rounded-lg focus:outline-none"
                             value={editAmount}
                             onChange={(e) => setEditAmount(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSaveAmount(c.id)}
-                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave(c.id)}
                           />
-                          <button
-                            type="button"
-                            onClick={() => handleSaveAmount(c.id)}
-                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
-                          >
-                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                          </button>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-end gap-1 group/amt">
-                          <span className="font-mono text-xs font-bold text-stone-700">${c.weeklyAmount.toLocaleString()}</span>
-                          <button
-                            onClick={() => handleStartEditAmount(c)}
-                            className="p-1 px-1.5 text-stone-400 hover:text-violet-600 hover:bg-violet-50 text-[10px] font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
-                            title="Editar monto"
-                          >
-                            ✏️
-                          </button>
-                        </div>
+                        <span className="font-mono text-xs font-bold text-stone-700">${c.weeklyAmount.toLocaleString()}</span>
                       )}
                     </td>
 
                     {/* Month Contribution Total calculated dynamically */}
-                    <td className="py-3 px-3 text-right">
+                    <td className="py-2.5 px-3 text-right">
                       <span className="font-mono font-black text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg">
                         ${monthTotal.toLocaleString()}
                       </span>
+                    </td>
+
+                    {/* Actions Column */}
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {isEditing ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleSave(c.id)}
+                              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                              title="Guardar"
+                            >
+                              <Check className="w-3 h-3 stroke-[3]" />
+                              <span>Ok</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                              className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                              title="Cancelar"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(c)}
+                              className="p-1 px-2 text-[10px] font-black tracking-wide bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-lg cursor-pointer transition flex items-center gap-1"
+                              title="Editar integrante"
+                            >
+                              ✏️ <span className="hidden md:inline">Editar</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`¿Quitar a ${c.name} del presupuesto semanal?`)) {
+                                  onDeleteContributor(c.id);
+                                }
+                              }}
+                              className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
+                              title="Eliminar integrante"
+                            >
+                              🗑️ <span className="hidden md:inline">Quitar</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

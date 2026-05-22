@@ -77,3 +77,14 @@ export interface FamilyContact {
   phone: string;
   relationship: string;
 }
+
+export interface IsssteAppointment {
+  id: string;
+  date: string;
+  time: string;
+  specialty: string;
+  doctor: string;
+  notes?: string;
+  isCompleted: boolean;
+}
+

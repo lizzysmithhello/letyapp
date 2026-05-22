@@ -11,7 +11,8 @@ import {
   Medicine, 
   BloodPressureReading, 
   FamilyBirthday, 
-  FamilyContact 
+  FamilyContact,
+  IsssteAppointment
 } from './types';
 
 export const INITIAL_SERVICES: ServicePayment[] = [
@@ -240,3 +241,25 @@ export const MOM_ADVICES = [
   "Encuentro el cargador o voy y lo busco yo?",
   "Porque lo digo yo y punto"
 ];
+
+export const INITIAL_APPOINTMENTS: IsssteAppointment[] = [
+  {
+    id: 'a-1',
+    date: '2026-06-15',
+    time: '08:30',
+    specialty: 'Geriatría (Control Anual)',
+    doctor: 'Dra. Patricia Martínez',
+    notes: 'Llevar los registros de presión arterial del último mes impresos o en el celular.',
+    isCompleted: false
+  },
+  {
+    id: 'a-2',
+    date: '2026-07-02',
+    time: '11:00',
+    specialty: 'Análisis Clínicos (Sangre y Orina)',
+    doctor: 'Laboratorio Clínica ISSSTE Sur',
+    notes: 'Presentarse con 12 horas de ayuno absoluto. Llevar carnet vigente.',
+    isCompleted: false
+  }
+];
+

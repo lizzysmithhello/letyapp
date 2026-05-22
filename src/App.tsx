@@ -23,7 +23,8 @@ import {
   ArrowRight,
   Sparkles,
   User,
-  LogOut
+  LogOut,
+  ChefHat
 } from 'lucide-react';
 
 import { 
@@ -35,7 +36,8 @@ import {
   BloodPressureReading, 
   SavingsProgress, 
   FamilyBirthday, 
-  FamilyContact 
+  FamilyContact,
+  IsssteAppointment
 } from './types';
 
 import { 
@@ -47,7 +49,8 @@ import {
   INITIAL_READINGS, 
   INITIAL_BIRTHDAYS, 
   INITIAL_CONTACTS,
-  MOM_ADVICES
+  MOM_ADVICES,
+  INITIAL_APPOINTMENTS
 } from './defaultData';
 
 import TributeHeader from './components/TributeHeader';
@@ -60,8 +63,9 @@ import SavingsPanel from './components/SavingsPanel';
 import FamilySection from './components/FamilySection';
 import LoginScreen from './components/LoginScreen';
 import UserProfileAndSettings from './components/UserProfileAndSettings';
+import RecipesPanel from './components/RecipesPanel';
 
-type TabID = 'panorama' | 'finances' | 'shopping' | 'health' | 'savings' | 'family' | 'profile';
+type TabID = 'panorama' | 'finances' | 'shopping' | 'health' | 'recipes' | 'savings' | 'family' | 'profile';
 
 export default function App() {
   // ---------------------------------------------------------------------------
@@ -198,6 +202,16 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_CONTACTS;
   });
 
+  const [isssteAppointments, setIsssteAppointments] = useState<IsssteAppointment[]>(() => {
+    const saved = localStorage.getItem('lety_issste_appointments_v1');
+    return saved ? JSON.parse(saved) : INITIAL_APPOINTMENTS;
+  });
+
+  const [glassCount, setGlassCount] = useState<number>(() => {
+    const saved = localStorage.getItem('lety_abuela_water_today');
+    return saved ? parseInt(saved) : 0;
+  });
+
   // ---------------------------------------------------------------------------
   // SYNCHRONIZATION WITH LOCALSTORAGE
   // ---------------------------------------------------------------------------
@@ -240,6 +254,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('lety_contacts', JSON.stringify(contacts));
   }, [contacts]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_issste_appointments_v1', JSON.stringify(isssteAppointments));
+  }, [isssteAppointments]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_abuela_water_today', glassCount.toString());
+  }, [glassCount]);
 
   // Sync parameter settings with localStorage
   useEffect(() => {
@@ -449,6 +471,27 @@ export default function App() {
 
   const handleDeleteReading = (id: string) => {
     setBloodPressureReadings(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleAddAppointment = (date: string, time: string, specialty: string, doctor: string, notes?: string) => {
+    const newAppt: IsssteAppointment = {
+      id: 'a_' + Math.random().toString(36).substr(2, 9),
+      date,
+      time,
+      specialty,
+      doctor,
+      notes,
+      isCompleted: false
+    };
+    setIsssteAppointments(prev => [newAppt, ...prev].sort((a, b) => a.date.localeCompare(b.date)));
+  };
+
+  const handleToggleAppointment = (id: string) => {
+    setIsssteAppointments(prev => prev.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted } : a));
+  };
+
+  const handleDeleteAppointment = (id: string) => {
+    setIsssteAppointments(prev => prev.filter(a => a.id !== id));
   };
 
   // SAVINGS PROGRESS
@@ -689,6 +732,18 @@ export default function App() {
               <span>Cuidado de Abuela</span>
             </button>
             <button
+              id="tab-btn-recipes"
+              onClick={() => setActiveTab('recipes')}
+              className={`px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                activeTab === 'recipes' 
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20 font-extrabold' 
+                  : 'text-stone-300 hover:text-white hover:bg-stone-850'
+              }`}
+            >
+              <ChefHat className="w-4 h-4" />
+              <span>Recetas 1800 Kcal</span>
+            </button>
+            <button
               id="tab-btn-savings"
               onClick={() => setActiveTab('savings')}
               className={`px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
@@ -857,6 +912,7 @@ export default function App() {
                     { id: 'finances', label: 'Presupuesto y Servicios', icon: <Receipt className="w-5 h-5" /> },
                     { id: 'shopping', label: 'Despensa del Hogar', icon: <ShoppingBag className="w-5 h-5" /> },
                     { id: 'health', label: 'Cuidado de Abuela', icon: <Activity className="w-5 h-5" /> },
+                    { id: 'recipes', label: 'Recetas 1800 Kcal', icon: <ChefHat className="w-5 h-5" /> },
                     { id: 'savings', label: 'Ahorro Familiar', icon: <PiggyBank className="w-5 h-5" /> },
                     { id: 'family', label: 'Directorio y Cumpleaños', icon: <Users className="w-5 h-5" /> },
                     { id: 'profile', label: 'Perfil & Ajustes', icon: <User className="w-5 h-5" /> },
@@ -1063,7 +1119,7 @@ export default function App() {
             </div>
 
             {/* QUICK LINK PANELS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Daily Pills Schedule at a glance */}
               <div className="bg-gradient-to-br from-stone-50 to-orange-50/20 border border-stone-200/50 rounded-2xl p-5">
                 <div className="flex justify-between items-center mb-4">
@@ -1129,6 +1185,32 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* Diet 1800 Kcal quick link card */}
+              <div className="bg-gradient-to-br from-stone-50 to-emerald-50/20 border border-stone-200/50 rounded-2xl p-5 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-base font-serif font-bold text-stone-800 flex items-center gap-1.5">
+                      <span>🥦</span> Menú de Dieta 1800 Kcal
+                    </h3>
+                    <span className="p-1 px-2 rounded-lg bg-emerald-100/70 text-emerald-800 text-[9px] font-black uppercase tracking-wider font-sans">
+                      Nutrición
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-500 leading-relaxed font-sans font-medium">
+                    Plan alimenticio bajo en sodio para controlar la presión de abuela {grandmaName}, con raciones escalables para todos en casa.
+                  </p>
+                </div>
+                
+                <button 
+                  onClick={() => setActiveTab('recipes')}
+                  className="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                >
+                  <span>Ver Menús y Escalar</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
             </div>
           </div>
         )}
@@ -1225,7 +1307,20 @@ export default function App() {
             onAddReading={handleAddReading}
             onDeleteReading={handleDeleteReading}
             grandmaName={grandmaName}
+            glassCount={glassCount}
+            onSetGlassCount={setGlassCount}
+            appointments={isssteAppointments}
+            onAddAppointment={handleAddAppointment}
+            onToggleAppointment={handleToggleAppointment}
+            onDeleteAppointment={handleDeleteAppointment}
           />
+        )}
+
+        {/* ---------------------------------------------------------------------------
+         * TAB 4B: ABUELA 1800 CALORIAS DIET CHART (RECETAS)
+         * --------------------------------------------------------------------------- */}
+        {activeTab === 'recipes' && (
+          <RecipesPanel currentUser={currentUser} />
         )}
 
         {/* ---------------------------------------------------------------------------
