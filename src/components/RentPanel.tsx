@@ -49,18 +49,7 @@ export default function RentPanel({
         <p className="text-stone-500 text-xs mt-0.5">Control individual de la renta del hogar</p>
       </div>
 
-      {/* Info Badge: part of the 19800 monthly */}
-      <div className="mb-5 bg-emerald-50/70 border border-emerald-100/80 rounded-2xl p-3 flex gap-2 text-emerald-905 items-start">
-        <Info className="w-4 h-4 text-emerald-650 shrink-0 mt-0.5" />
-        <div className="space-y-0.5">
-          <p className="text-[11px] font-bold text-emerald-900 leading-tight">
-            Presupuesto Integrado
-          </p>
-          <p className="text-[10px] text-emerald-805 leading-normal">
-            Estos montos (<strong className="font-extrabold">${totalRentGoal.toLocaleString('es-MX')}</strong> total) <strong>también forman parte</strong> de los <span className="font-bold">${monthlyBudgetGoal.toLocaleString('es-MX')}</span> mensuales del presupuesto familiar.
-          </p>
-        </div>
-      </div>
+
 
       {/* Progress dial */}
       <div className="grid grid-cols-2 gap-3 mb-5">

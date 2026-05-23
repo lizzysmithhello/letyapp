@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Settings, Save, RefreshCw, CheckCircle, Lock } from 'lucide-react';
+import { Settings, Save, RefreshCw, Lock } from 'lucide-react';
 
 interface HouseholdSettingsPanelProps {
   grandmaName: string;
@@ -17,8 +17,6 @@ interface HouseholdSettingsPanelProps {
   setFoodBudget: (val: number) => void;
   basicsBudget: number;
   setBasicsBudget: (val: number) => void;
-  savingsAlloc: number;
-  setSavingsAlloc: (val: number) => void;
   transportBudget: number;
   setTransportBudget: (val: number) => void;
 
@@ -34,6 +32,14 @@ interface HouseholdSettingsPanelProps {
   gasAverage: number;
   setGasAverage: (val: number) => void;
 
+  // Additional fixed expenses
+  veladorDia: number;
+  setVeladorDia: (val: number) => void;
+  veladorNoche: number;
+  setVeladorNoche: (val: number) => void;
+  limpieza: number;
+  setLimpieza: (val: number) => void;
+
   onResetDefaults: () => void;
   currentUser?: { name: string; email: string; avatarUrl: string; provider: 'email' | 'google' } | null;
 }
@@ -47,8 +53,6 @@ export default function HouseholdSettingsPanel({
   setFoodBudget,
   basicsBudget,
   setBasicsBudget,
-  savingsAlloc,
-  setSavingsAlloc,
   transportBudget,
   setTransportBudget,
   rentAverage,
@@ -61,6 +65,12 @@ export default function HouseholdSettingsPanel({
   setAguaAverage,
   gasAverage,
   setGasAverage,
+  veladorDia,
+  setVeladorDia,
+  veladorNoche,
+  setVeladorNoche,
+  limpieza,
+  setLimpieza,
   onResetDefaults,
   currentUser
 }: HouseholdSettingsPanelProps) {
@@ -77,9 +87,11 @@ export default function HouseholdSettingsPanel({
   const [tempLuz, setTempLuz] = useState(luzAverage.toString());
   const [tempAgua, setTempAgua] = useState(aguaAverage.toString());
   const [tempGas, setTempGas] = useState(gasAverage.toString());
+  const [tempVeladorDia, setTempVeladorDia] = useState(veladorDia.toString());
+  const [tempVeladorNoche, setTempVeladorNoche] = useState(veladorNoche.toString());
+  const [tempLimpieza, setTempLimpieza] = useState(limpieza.toString());
   const [tempFood, setTempFood] = useState(foodBudget.toString());
   const [tempBasics, setTempBasics] = useState(basicsBudget.toString());
-  const [tempSavings, setTempSavings] = useState(savingsAlloc.toString());
   const [tempTransport, setTempTransport] = useState(transportBudget.toString());
 
   const handleStartEdit = () => {
@@ -90,9 +102,11 @@ export default function HouseholdSettingsPanel({
     setTempLuz(luzAverage.toString());
     setTempAgua(aguaAverage.toString());
     setTempGas(gasAverage.toString());
+    setTempVeladorDia(veladorDia.toString());
+    setTempVeladorNoche(veladorNoche.toString());
+    setTempLimpieza(limpieza.toString());
     setTempFood(foodBudget.toString());
     setTempBasics(basicsBudget.toString());
-    setTempSavings(savingsAlloc.toString());
     setTempTransport(transportBudget.toString());
     setIsEditing(true);
   };
@@ -103,12 +117,14 @@ export default function HouseholdSettingsPanel({
     setMonthlyIncome(parseFloat(tempIncome) || 19800);
     setRentAverage(parseFloat(tempRent) || 7500);
     setIzziAverage(parseFloat(tempIzzi) || 345);
-    setLuzAverage(parseFloat(tempLuz) || 750);
+    setLuzAverage(parseFloat(tempLuz) || 1500);
     setAguaAverage(parseFloat(tempAgua) || 400);
     setGasAverage(parseFloat(tempGas) || 333);
+    setVeladorDia(parseFloat(tempVeladorDia) || 120);
+    setVeladorNoche(parseFloat(tempVeladorNoche) || 120);
+    setLimpieza(parseFloat(tempLimpieza) || 1200);
     setFoodBudget(parseFloat(tempFood) || 6200);
     setBasicsBudget(parseFloat(tempBasics) || 1200);
-    setSavingsAlloc(parseFloat(tempSavings) || 1500);
     setTransportBudget(parseFloat(tempTransport) || 1000);
     
     setIsEditing(false);
@@ -132,14 +148,15 @@ export default function HouseholdSettingsPanel({
   const currLuz = isEditing ? (parseFloat(tempLuz) || 0) : luzAverage;
   const currAgua = isEditing ? (parseFloat(tempAgua) || 0) : aguaAverage;
   const currGas = isEditing ? (parseFloat(tempGas) || 0) : gasAverage;
+  const currVeladorDia = isEditing ? (parseFloat(tempVeladorDia) || 0) : veladorDia;
+  const currVeladorNoche = isEditing ? (parseFloat(tempVeladorNoche) || 0) : veladorNoche;
+  const currLimpieza = isEditing ? (parseFloat(tempLimpieza) || 0) : limpieza;
 
   const currFood = isEditing ? (parseFloat(tempFood) || 0) : foodBudget;
   const currBasics = isEditing ? (parseFloat(tempBasics) || 0) : basicsBudget;
-  const currSavings = isEditing ? (parseFloat(tempSavings) || 0) : savingsAlloc;
   const currTransport = isEditing ? (parseFloat(tempTransport) || 0) : transportBudget;
 
-  const totalHousingServices = currRent + currIzzi + currLuz + currAgua + currGas;
-  const leftoverForGuardadito = currIncome - currFood - totalHousingServices - currBasics - currTransport;
+  const totalHousingServices = currRent + currIzzi + currLuz + currAgua + currGas + currVeladorDia + currVeladorNoche + currLimpieza;
 
   return (
     <div className="bg-white border-2 border-stone-150 rounded-3xl p-5 sm:p-6 shadow-md mb-6 relative overflow-hidden">
@@ -194,8 +211,8 @@ export default function HouseholdSettingsPanel({
         </div>
       )}
 
-      {/* NEW RADIOGRAPHY INTERFACE: EXACTLY AS REQUESTED */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* RADIOGRAPHY INTERFACE: REMOVED GUARDADITO CARD, COLUMNS RESIZED */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {/* Card 1: Total presupuesto al mes */}
         <div className="p-4 bg-gradient-to-br from-indigo-50/60 to-white border border-indigo-150 rounded-2xl">
           <span className="text-[10px] uppercase font-black text-indigo-500 tracking-wider">Total Presupuesto Mes</span>
@@ -222,19 +239,6 @@ export default function HouseholdSettingsPanel({
           </div>
           <p className="text-[10px] text-stone-500 mt-1 font-sans">Renta, internet, luz, agua y gas L.P.</p>
         </div>
-
-        {/* Card 4: Margen libre para el guardadito */}
-        <div className={`p-4 border rounded-2xl ${leftoverForGuardadito >= 0 ? 'bg-gradient-to-br from-rose-50/60 to-white border-rose-200' : 'bg-red-50/80 border-red-200'}`}>
-          <span className="text-[10px] uppercase font-black text-rose-600 tracking-wider">Guardadito y Margen Libre</span>
-          <div className="text-xl font-mono font-black text-rose-950 mt-1">
-            ${leftoverForGuardadito.toLocaleString()} <span className="text-xs font-bold text-stone-500 font-sans">MXN</span>
-          </div>
-          <p className="text-[10px] text-stone-500 mt-1 font-sans">
-            {leftoverForGuardadito >= 0 
-              ? '✅ Sobrante listo para el cochinito' 
-              : '⚠️ Ajustar: Presupuesto en desborde'}
-          </p>
-        </div>
       </div>
 
       {/* SINGLE COLUMN FOR CONFIG */}
@@ -242,51 +246,203 @@ export default function HouseholdSettingsPanel({
         <div className="bg-stone-50/50 p-5 border border-stone-150 rounded-2xl">
           {!isEditing ? (
             <div className="space-y-4 text-xs">
-              <h4 className="font-extrabold text-[10px] uppercase text-stone-400 tracking-widest border-b border-stone-200 pb-2 flex justify-between">
-                <span>Canasta Básica y Fijos del PDF</span>
-                <span className="text-stone-500 font-sans italic not-case font-normal lowercase">(Nombre de abuela se gestiona en su módulo)</span>
-              </h4>
+              <div className="border-b border-stone-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <h4 className="font-extrabold text-[10px] uppercase text-stone-500 tracking-widest">
+                  📋 Resumen General de Parámetros Fijos y Despensa
+                </h4>
+                <span className="text-stone-400 font-sans text-[10px] italic">
+                  (El nombre de la abuela se gestiona desde el módulo correspondiente)
+                </span>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Alimentación Mensual (6 personas):</span>
-                    <strong className="text-stone-850 font-mono">${foodBudget.toLocaleString()} MXN</strong>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Col 1: Canasta de Consumo */}
+                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-stone-100 pb-2 flex-wrap">
+                    <span className="p-1 px-1.5 rounded-lg bg-orange-50 text-orange-600 text-xs font-bold font-mono">🧺</span>
+                    <h4 className="font-extrabold text-[11px] uppercase tracking-wider text-stone-700">
+                      Canasta de Consumo
+                    </h4>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Básicos del hogar / Limpieza:</span>
-                    <strong className="text-stone-850 font-mono">${basicsBudget.toLocaleString()} MXN</strong>
-                  </div>
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Guardadito para imprevistos / emergencias:</span>
-                    <strong className="text-emerald-700 font-mono">${savingsAlloc.toLocaleString()} MXN</strong>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-stone-500 font-medium">Transporte y extras mínimos:</span>
-                    <strong className="text-stone-850 font-mono">${transportBudget.toLocaleString()} MXN</strong>
+                  
+                  <div className="space-y-2">
+                    {/* Alimentacion */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🍎</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Alimentación</span>
+                          <span className="block text-[8px] text-stone-400">Canasta mensual (6 pers)</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${foodBudget.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Basicos */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🧼</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Limpieza e Higiene</span>
+                          <span className="block text-[8px] text-stone-400">Básicos del hogar</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${basicsBudget.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Transporte */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🚌</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Transporte</span>
+                          <span className="block text-[8px] text-stone-400">Movilidad mínima y extras</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${transportBudget.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2.5 border-t md:border-t-0 md:border-l md:pl-6 border-stone-100 pt-3 md:pt-0">
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium font-sans">Renta Mensual Fija Vivienda:</span>
-                    <strong className="text-stone-850 font-mono">${rentAverage.toLocaleString()} MXN</strong>
+                {/* Col 2: Servicios Residenciales */}
+                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-stone-100 pb-2 flex-wrap">
+                    <span className="p-1 px-1.5 rounded-lg bg-sky-50 text-sky-600 text-xs font-bold font-mono font-sans">⚡</span>
+                    <h4 className="font-extrabold text-[11px] uppercase tracking-wider text-stone-700">
+                      Servicios de la Casa
+                    </h4>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Internet / Cable Izzi:</span>
-                    <strong className="text-stone-850 font-mono">${izziAverage.toLocaleString()} MXN</strong>
+
+                  <div className="space-y-2">
+                    {/* Renta */}
+                    <div className="flex items-center justify-between p-2 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🏠</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Renta de Casa</span>
+                          <span className="block text-[8px] text-stone-400">Arrendamiento fijo</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${rentAverage.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Izzi */}
+                    <div className="flex items-center justify-between p-2 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🌐</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Internet / Izzi</span>
+                          <span className="block text-[8px] text-stone-400">Cable banda ancha</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${izziAverage.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Luz */}
+                    <div className="flex items-center justify-between p-2 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">💡</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Luz Promedio</span>
+                          <span className="block text-[8px] text-stone-400">CFE Bimestral prorrateada</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${luzAverage.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Agua */}
+                    <div className="flex items-center justify-between p-2 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">💧</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Agua Potable</span>
+                          <span className="block text-[8px] text-stone-400">Servicio mensualizado</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${aguaAverage.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Gas */}
+                    <div className="flex items-center justify-between p-2 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🔥</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Gas L.P. promedio</span>
+                          <span className="block text-[8px] text-stone-400">Cálculo promedio</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${gasAverage.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Luz Promedio (CFE Bimestral prorrateada):</span>
-                    <strong className="text-stone-850 font-mono">${luzAverage.toLocaleString()} MXN</strong>
+                </div>
+
+                {/* Col 3: Apoyo & Seguridad */}
+                <div className="bg-white border border-stone-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div className="flex items-center gap-2 border-b border-stone-100 pb-2 flex-wrap">
+                    <span className="p-1 px-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-bold font-mono">🛡️</span>
+                    <h4 className="font-extrabold text-[11px] uppercase tracking-wider text-stone-700">
+                      Apoyos y Seguridad
+                    </h4>
                   </div>
-                  <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                    <span className="text-stone-500 font-medium">Agua Potable (Prorrateada al mes):</span>
-                    <strong className="text-stone-850 font-mono">${aguaAverage.toLocaleString()} MXN</strong>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-stone-500 font-medium">Gas L.P. promedio mensual:</span>
-                    <strong className="text-stone-850 font-mono">${gasAverage.toLocaleString()} MXN</strong>
+
+                  <div className="space-y-2">
+                    {/* Velador Día */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">☀️</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Velador Día</span>
+                          <span className="block text-[8px] text-stone-400">Vigilancia diurna asignada</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${veladorDia.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Velador Noche */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🌙</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Velador Noche</span>
+                          <span className="block text-[8px] text-stone-400">Custodia nocturna fija</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${veladorNoche.toLocaleString()}
+                      </span>
+                    </div>
+
+                    {/* Señora Limpieza */}
+                    <div className="flex items-center justify-between p-2.5 bg-stone-50/70 border border-stone-100/50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base select-none">🧹</span>
+                        <div>
+                          <span className="block font-bold text-stone-800 text-[11px] leading-tight">Señora Limpieza</span>
+                          <span className="block text-[8px] text-stone-400">Servicios e higiene hogar</span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-xs text-stone-900 bg-white px-2 py-1 rounded-lg border border-stone-150">
+                        ${limpieza.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -347,17 +503,6 @@ export default function HouseholdSettingsPanel({
                       value={tempBasics}
                       onChange={(e) => setTempBasics(e.target.value)}
                       className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-stone-500 font-semibold mb-0.5">Guardadito imprevistos</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={tempSavings}
-                      onChange={(e) => setTempSavings(e.target.value)}
-                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white font-bold text-emerald-700"
                     />
                   </div>
                   <div>
@@ -431,6 +576,39 @@ export default function HouseholdSettingsPanel({
                       className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
                     />
                   </div>
+                  <div>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Velador Día fijo ($)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={tempVeladorDia}
+                      onChange={(e) => setTempVeladorDia(e.target.value)}
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Velador Noche fijo ($)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={tempVeladorNoche}
+                      onChange={(e) => setTempVeladorNoche(e.target.value)}
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-500 font-semibold mb-0.5">Señora Limpieza fija ($)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={tempLimpieza}
+                      onChange={(e) => setTempLimpieza(e.target.value)}
+                      className="w-full text-xs font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 bg-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -446,7 +624,6 @@ export default function HouseholdSettingsPanel({
                   type="submit"
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs flex items-center gap-1 cursor-pointer"
                 >
-                  <Save className="w-3.5 h-3.5" />
                   Guardar Cambios
                 </button>
               </div>

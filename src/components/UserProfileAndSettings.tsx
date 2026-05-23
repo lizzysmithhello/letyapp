@@ -42,6 +42,23 @@ interface UserProfileAndSettingsProps {
   
   // Active sub-panes control
   initialSection?: 'perfil' | 'frases' | 'cumpleanos';
+
+  // Exclusive Admin Ericka parameters
+  monthlyIncome: number;
+  foodBudget: number;
+  basicsBudget: number;
+  transportBudget: number;
+  rentAverage: number;
+  izziAverage: number;
+  luzAverage: number;
+  aguaAverage: number;
+  gasAverage: number;
+  veladorDia: number;
+  veladorNoche: number;
+  limpieza: number;
+  shoppingItems: any[];
+  savingsAlloc: number;
+  setSavingsAlloc: (val: number) => void;
 }
 
 export default function UserProfileAndSettings({
@@ -52,7 +69,22 @@ export default function UserProfileAndSettings({
   birthdays,
   onAddBirthday,
   onDeleteBirthday,
-  initialSection = 'perfil'
+  initialSection = 'perfil',
+  monthlyIncome,
+  foodBudget,
+  basicsBudget,
+  transportBudget,
+  rentAverage,
+  izziAverage,
+  luzAverage,
+  aguaAverage,
+  gasAverage,
+  veladorDia,
+  veladorNoche,
+  limpieza,
+  shoppingItems,
+  savingsAlloc,
+  setSavingsAlloc
 }: UserProfileAndSettingsProps) {
   const [activeSubTab, setActiveSubTab] = useState<'perfil' | 'frases' | 'cumpleanos'>(initialSection);
   const [newPhraseInput, setNewPhraseInput] = useState('');
@@ -286,6 +318,132 @@ export default function UserProfileAndSettings({
                 </div>
               </div>
             </div>
+
+            {/* EXCLUSIVE SECTION FOR ERICKA: LIVE GUARDADITO & MARGEN LIBRE PREDICTIVO */}
+            {canEdit && (() => {
+              const totalComidaSpentPriv = shoppingItems
+                ? shoppingItems.filter(item => item.category === 'comida').reduce((sum, item) => sum + (item.price || 0), 0)
+                : 0;
+
+              const totalHogarSpentPriv = shoppingItems
+                ? shoppingItems.filter(item => item.category === 'hogar').reduce((sum, item) => sum + (item.price || 0), 0)
+                : 0;
+
+              const totalGrocerySpentPriv = totalComidaSpentPriv + totalHogarSpentPriv;
+              const totalFijosPriv = (rentAverage || 0) + (izziAverage || 0) + (luzAverage || 0) + (aguaAverage || 0) + (gasAverage || 0) + (veladorDia || 0) + (veladorNoche || 0) + (limpieza || 0);
+              const extrasPriv = transportBudget || 0;
+
+              // Predicción: how much is left from the income
+              const predictedLeftoverPriv = monthlyIncome - totalGrocerySpentPriv - totalFijosPriv - extrasPriv;
+
+              return (
+                <div className="bg-gradient-to-br from-rose-50/30 via-stone-50/30 to-white border-2 border-rose-150 rounded-2xl p-5 sm:p-6 shadow-md space-y-5 animate-fade-in">
+                  <div className="flex items-center gap-2 border-b border-rose-100 pb-3 justify-between flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-rose-100 text-rose-700 font-black">
+                        💵
+                      </div>
+                      <div>
+                        <h4 className="font-serif font-black text-rose-955 text-base">
+                          Predicción de Guardadito y Margen Libre (Exclusivo Admin)
+                        </h4>
+                        <p className="text-[10px] text-stone-500 mt-0.5">Cálculo predictivo en base a consumos reales de súper y gastos fijos</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 bg-rose-150 text-rose-900 font-mono text-[9px] font-black rounded-md uppercase">
+                      Admin: Ericka
+                    </span>
+                  </div>
+
+                  <p className="text-stone-600 text-xs leading-relaxed">
+                    Este panel calcula en tiempo real tu remanente final (<strong>Guardadito</strong>) restando del presupuesto de la familia los gastos fijos del hogar, los extras declarados y la suma de lo que <strong>realmente se ha gastado</strong> en el súper (comida y consumibles indispensables).
+                  </p>
+
+                  {/* Math Breakdown Graphic */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
+                    {/* Presupuesto Base */}
+                    <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                      <span className="text-[9px] uppercase font-bold text-indigo-700 block">Fondo Neto Familiar</span>
+                      <strong className="text-base font-mono block text-indigo-950 mt-1">${monthlyIncome.toLocaleString()}</strong>
+                      <span className="text-[9px] text-stone-500">Ingreso Mensual Base</span>
+                    </div>
+
+                    {/* Gastado Canasta */}
+                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                      <span className="text-[9px] uppercase font-bold text-amber-800 block">Gasto Súper Registrado</span>
+                      <strong className="text-base font-mono block text-amber-950 mt-1">-${totalGrocerySpentPriv.toLocaleString()}</strong>
+                      <span className="text-[9px] text-stone-500 font-sans block">Comida: ${totalComidaSpentPriv.toLocaleString()}</span>
+                      <span className="text-[9px] text-stone-500 font-sans block">Hogar: ${totalHogarSpentPriv.toLocaleString()}</span>
+                    </div>
+
+                    {/* Gastos Fijos (Luz promedio 1500) */}
+                    <div className="p-3 bg-stone-100 border border-stone-200 rounded-xl">
+                      <span className="text-[9px] uppercase font-bold text-stone-600 block">Fijos y Luz (CFE)</span>
+                      <strong className="text-base font-mono block text-stone-800 mt-1">-${totalFijosPriv.toLocaleString()}</strong>
+                      <span className="text-[8px] text-stone-500 font-sans block">Renta: ${rentAverage} | Servs: ${(izziAverage + luzAverage + aguaAverage + gasAverage)}</span>
+                      <span className="text-[8px] text-stone-500 font-sans block">Velador D/N: ${veladorDia}/${veladorNoche} | Limp: ${limpieza}</span>
+                    </div>
+
+                    {/* Transporte */}
+                    <div className="p-3 bg-stone-100 border border-stone-200 rounded-xl">
+                      <span className="text-[9px] uppercase font-bold text-stone-600 block">Transporte y Extras</span>
+                      <strong className="text-base font-mono block text-stone-800 mt-1">-${extrasPriv.toLocaleString()}</strong>
+                      <span className="text-[9px] text-stone-500 font-sans">Mínimo de transporte</span>
+                    </div>
+                  </div>
+
+                  {/* Prediction Outcome Header */}
+                  <div className="p-4 bg-rose-50/50 border border-rose-150 rounded-xl flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-rose-700 tracking-wider">Predicción del Guardadito Restante</span>
+                      <div className="text-2xl font-mono font-black text-rose-950 mt-1">
+                        ${predictedLeftoverPriv.toLocaleString()} <span className="text-xs font-sans font-bold text-stone-500">MXN</span>
+                      </div>
+                    </div>
+                    <div>
+                      {predictedLeftoverPriv >= 0 ? (
+                        <div className="px-3 py-1 bg-emerald-100 border border-emerald-200 text-emerald-800 text-[10px] font-bold rounded-lg uppercase tracking-wider font-mono">
+                          📈 Sobrante Positivo (Ahorro)
+                        </div>
+                      ) : (
+                        <div className="px-3 py-1 bg-red-100 border border-red-200 text-red-800 text-[10px] font-bold rounded-lg uppercase tracking-wider font-mono">
+                          ⚠️ Ajustar: Presupuesto Excedido
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Base Guardadito Interactive Control */}
+                  <div className="pt-3 border-t border-rose-100 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3.5 bg-white rounded-xl border border-rose-100">
+                      <div>
+                        <span className="text-xs font-bold text-stone-800 block">Ajuste de Guardadito Base Mensual</span>
+                        <p className="text-[10px] text-stone-500 leading-normal">Fijar un monto estándar de resguardos e imprevistos</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                        <button 
+                          type="button" 
+                          onClick={() => setSavingsAlloc(Math.max(0, savingsAlloc - 100))}
+                          className="w-8 h-8 rounded-lg bg-stone-50 hover:bg-stone-100 border border-stone-200 font-mono font-bold text-xs select-none shrink-0 flex items-center justify-center cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="w-24 text-center font-mono font-black text-xs text-rose-900 bg-stone-50/50 border border-stone-150 rounded-md py-1">
+                          ${savingsAlloc.toLocaleString()} MXN
+                        </span>
+                        <button 
+                          type="button" 
+                          onClick={() => setSavingsAlloc(savingsAlloc + 100)}
+                          className="w-8 h-8 rounded-lg bg-stone-50 hover:bg-stone-100 border border-stone-200 font-mono font-bold text-xs select-none shrink-0 flex items-center justify-center cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 

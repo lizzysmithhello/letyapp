@@ -88,3 +88,28 @@ export interface IsssteAppointment {
   isCompleted: boolean;
 }
 
+export interface WeeklySurplus {
+  id: string;
+  weekLabel: string;
+  amount: number;
+  date: string;
+}
+
+export interface MonthlyArchive {
+  id: string;
+  monthYear: string; // e.g. "2026-05"
+  monthLabel: string; // e.g. "Mayo 2026"
+  archivedAt: string;
+  monthlyIncome: number;
+  totalContributorsPaid: number;
+  totalServicesPaid: number;
+  rentCollected: number;
+  grandmaWaterGlasses: number;
+  weeklySurplusesTotal: number;
+  contributorsSnap: WeeklyContributor[];
+  servicesSnap: ServicePayment[];
+  rentStatesSnap: { israel: boolean; ericka: boolean; grandma: boolean };
+  savingsSnapshot: number;
+}
+
+

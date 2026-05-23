@@ -159,59 +159,35 @@ export default function ShoppingPanel({
             </div>
           </div>
 
-          {/* Core financial diagnostics */}
+          {/* Core financial diagnostics: only sums, no limits */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 text-stone-800">
             {/* Food budget diagnostic */}
-            <div className="p-3.5 bg-sky-50/50 border border-sky-100 rounded-2xl">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-extrabold text-sky-700 uppercase tracking-wider block">Despensa Comida</span>
-                <span className="text-[10px] p-0.5 px-1.5 rounded-md bg-sky-100 text-sky-800 font-bold font-mono">Meta: ${foodBudgetLimit}</span>
-              </div>
-              <span className="text-lg font-mono font-black text-stone-900 mt-1 block">
-                ${totalComidaPrice.toLocaleString('es-MX')}
+            <div className="p-4 bg-sky-50/50 border border-sky-100 rounded-2xl">
+              <span className="text-[10px] font-extrabold text-sky-700 uppercase tracking-wider block">Suma Alimentos (Comida)</span>
+              <span className="text-2xl font-mono font-black text-stone-900 mt-2 block">
+                ${totalComidaPrice.toLocaleString('es-MX')} <span className="text-xs font-bold text-stone-500 font-sans">MXN</span>
               </span>
-              <div className="mt-1.5 w-full bg-stone-200/80 rounded-full h-1.5">
-                <div 
-                  className={`h-1.5 rounded-full ${totalComidaPrice > foodBudgetLimit ? 'bg-red-500' : 'bg-sky-500'}`}
-                  style={{ width: `${Math.min(100, (totalComidaPrice / foodBudgetLimit) * 100)}%` }}
-                />
-              </div>
-              {totalComidaPrice > foodBudgetLimit && (
-                <span className="text-[9px] text-red-600 block mt-1 font-semibold">⚠️ Excede límite recomendado</span>
-              )}
+              <p className="text-[10px] text-stone-500 leading-normal mt-1">Suma acumulada de productos alimenticios y lácteos</p>
             </div>
 
             {/* Basics household diagnostic */}
-            <div className="p-3.5 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider block">Despensa Hogar (Básicos)</span>
-                <span className="text-[10px] p-0.5 px-1.5 rounded-md bg-indigo-100 text-indigo-800 font-bold font-mono font-mono">Meta: ${basicsBudgetLimit}</span>
-              </div>
-              <span className="text-lg font-mono font-black text-stone-900 mt-1 block">
-                ${totalHogarPrice.toLocaleString('es-MX')}
+            <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+              <span className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider block">Suma Consumibles (Hogar y Limpieza)</span>
+              <span className="text-2xl font-mono font-black text-stone-900 mt-2 block">
+                ${totalHogarPrice.toLocaleString('es-MX')} <span className="text-xs font-bold text-stone-500 font-sans">MXN</span>
               </span>
-              <div className="mt-1.5 w-full bg-stone-200/80 rounded-full h-1.5">
-                <div 
-                  className={`h-1.5 rounded-full ${totalHogarPrice > basicsBudgetLimit ? 'bg-red-500' : 'bg-indigo-500'}`}
-                  style={{ width: `${Math.min(100, (totalHogarPrice / basicsBudgetLimit) * 100)}%` }}
-                />
-              </div>
-              {totalHogarPrice > basicsBudgetLimit && (
-                <span className="text-[9px] text-red-600 block mt-1 font-semibold">⚠️ Excede límite familiar</span>
-              )}
+              <p className="text-[10px] text-stone-500 leading-normal mt-1">Suma acumulada de artículos de limpieza y aseo</p>
             </div>
 
             {/* Total global grocery diagnostic */}
-            <div className="p-3.5 bg-emerald-50/40 border border-emerald-150 rounded-2xl flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block">Presupuesto Cargado</span>
-                <span className="text-xl font-mono font-black text-emerald-950 mt-1 block">
-                  ${grandTotalShopping.toLocaleString('es-MX')}
-                </span>
-              </div>
-              <div className="text-[10px] font-bold text-emerald-800 flex items-center gap-1 mt-1 font-sans">
+            <div className="p-4 bg-emerald-50/40 border border-emerald-150 rounded-2xl">
+              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider block">Suma Total Despensa Realizada</span>
+              <span className="text-2xl font-mono font-black text-emerald-950 mt-2 block">
+                ${grandTotalShopping.toLocaleString('es-MX')} <span className="text-xs font-bold text-stone-500 font-sans">MXN</span>
+              </span>
+              <div className="text-[10px] font-bold text-stone-500 mt-1 font-sans flex justify-between">
                 <span>Comprados: {boughtItems} de {totalItems}</span>
-                <span className="ml-auto bg-emerald-100 px-1 py-0.5 rounded-sm font-mono text-[9px]">{progressPercent}%</span>
+                <span className="text-emerald-700 font-bold bg-emerald-100 px-1 py-0.5 rounded-sm font-mono text-[9px]">{progressPercent}%</span>
               </div>
             </div>
           </div>
@@ -219,9 +195,9 @@ export default function ShoppingPanel({
           {/* Surtido progress bar */}
           <div className="w-full bg-stone-100 rounded-xl p-2.5 flex items-center gap-3">
             <span className="text-stone-500 text-[10px] font-extrabold uppercase tracking-widest shrink-0">Avance Súper</span>
-            <div className="w-full bg-stone-200 rounded-full h-2">
+            <div className="w-full bg-stone-200 rounded-full h-1.5">
               <div 
-                className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-2 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-1.5 rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>

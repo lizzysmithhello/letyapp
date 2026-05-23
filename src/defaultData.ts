@@ -51,6 +51,27 @@ export const INITIAL_SERVICES: ServicePayment[] = [
     dueDate: '2026-07-19', // Due before 19, paid recently on May 18
     isPaid: true,
     paymentDate: '2026-05-18',
+  },
+  {
+    id: 's-6',
+    name: 'Velador Día',
+    amount: 120,
+    dueDate: '2026-05-30',
+    isPaid: false,
+  },
+  {
+    id: 's-7',
+    name: 'Velador Noche',
+    amount: 120,
+    dueDate: '2026-05-30',
+    isPaid: false,
+  },
+  {
+    id: 's-8',
+    name: 'Señora Limpieza',
+    amount: 1200,
+    dueDate: '2026-05-30',
+    isPaid: false,
   }
 ];
 

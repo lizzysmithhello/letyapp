@@ -91,7 +91,7 @@ export default function HealthPanel({
         label: 'Hipertensión Fase 2',
         color: 'bg-rose-100 border-rose-300 text-rose-800',
         alert: true,
-        desc: '⚠️ Presión MUY ALTA. Repetir en 5 min, si sigue alta, llama al Dr. Salvador Romero.'
+        desc: '⚠️ Presión MUY ALTA. Repetir en 5 min, si sigue alta, llama a urgencias o a su médico de cabecera.'
       };
     } else if ((systolic >= 130 && systolic <= 139) || (diastolic >= 80 && diastolic <= 89)) {
       return {
@@ -370,7 +370,7 @@ export default function HealthPanel({
                       <span>⚠️</span> Instrucciones del Geriatra
                     </p>
                     <p className="text-amber-900 leading-normal">
-                      No mezclar suplementos o tés de hierbas sin consultarlo preventivamente antes con el Dr. Salvador Romero.
+                      No mezclar suplementos o tés de hierbas sin consultarlo preventivamente antes con su médico geriatra.
                     </p>
                   </div>
                 </div>

@@ -24,7 +24,9 @@ import {
   Sparkles,
   User,
   LogOut,
-  ChefHat
+  ChefHat,
+  Calendar,
+  Archive
 } from 'lucide-react';
 
 import { 
@@ -37,7 +39,9 @@ import {
   SavingsProgress, 
   FamilyBirthday, 
   FamilyContact,
-  IsssteAppointment
+  IsssteAppointment,
+  WeeklySurplus,
+  MonthlyArchive
 } from './types';
 
 import { 
@@ -137,7 +141,7 @@ export default function App() {
   });
   const [luzAverage, setLuzAverage] = useState(() => {
     const saved = localStorage.getItem('lety_luz_avg');
-    return saved ? parseFloat(saved) : 750;
+    return saved ? parseFloat(saved) : 1500;
   });
   const [aguaAverage, setAguaAverage] = useState(() => {
     const saved = localStorage.getItem('lety_agua_avg');
@@ -146,6 +150,18 @@ export default function App() {
   const [gasAverage, setGasAverage] = useState(() => {
     const saved = localStorage.getItem('lety_gas_avg');
     return saved ? parseFloat(saved) : 333;
+  });
+  const [veladorDia, setVeladorDia] = useState(() => {
+    const saved = localStorage.getItem('lety_velador_dia');
+    return saved ? parseFloat(saved) : 120;
+  });
+  const [veladorNoche, setVeladorNoche] = useState(() => {
+    const saved = localStorage.getItem('lety_velador_noche');
+    return saved ? parseFloat(saved) : 120;
+  });
+  const [limpieza, setLimpieza] = useState(() => {
+    const saved = localStorage.getItem('lety_limpieza');
+    return saved ? parseFloat(saved) : 1200;
   });
 
   // --- CORE SERVICES & CHECKLIST STATES ---
@@ -218,12 +234,43 @@ export default function App() {
     return saved ? JSON.parse(saved) : { israel: false, ericka: false, grandma: false };
   });
 
+  // --- NEW ARCHIVE & CLOSING STATES ---
+  const [weeklySurpluses, setWeeklySurpluses] = useState<WeeklySurplus[]>(() => {
+    const saved = localStorage.getItem('lety_weekly_surpluses_v2');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [monthlyArchives, setMonthlyArchives] = useState<MonthlyArchive[]>(() => {
+    const saved = localStorage.getItem('lety_monthly_archives_v1');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  interface RolloverAlert {
+    show: boolean;
+    detectedNewMonth: string;
+    previousMonthLabel: string;
+  }
+
+  const [rolloverAlert, setRolloverAlert] = useState<RolloverAlert>({
+    show: false,
+    detectedNewMonth: '',
+    previousMonthLabel: ''
+  });
+
   // ---------------------------------------------------------------------------
   // SYNCHRONIZATION WITH LOCALSTORAGE
   // ---------------------------------------------------------------------------
   useEffect(() => {
     localStorage.setItem('lety_rent_states_v2', JSON.stringify(rentStates));
   }, [rentStates]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_weekly_surpluses_v2', JSON.stringify(weeklySurpluses));
+  }, [weeklySurpluses]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_monthly_archives_v1', JSON.stringify(monthlyArchives));
+  }, [monthlyArchives]);
 
   useEffect(() => {
     localStorage.setItem('lety_services', JSON.stringify(services));
@@ -318,6 +365,50 @@ export default function App() {
     localStorage.setItem('lety_gas_avg', gasAverage.toString());
   }, [gasAverage]);
 
+  useEffect(() => {
+    localStorage.setItem('lety_velador_dia', veladorDia.toString());
+  }, [veladorDia]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_velador_noche', veladorNoche.toString());
+  }, [veladorNoche]);
+
+  useEffect(() => {
+    localStorage.setItem('lety_limpieza', limpieza.toString());
+  }, [limpieza]);
+
+  useEffect(() => {
+    const today = new Date();
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`; // e.g. "2026-05"
+    const savedLastMonth = localStorage.getItem('lety_last_checked_month_year');
+
+    const getMonthNameLabelFromStr = (ymStr: string) => {
+      try {
+        const [year, month] = ymStr.split('-');
+        const monthIndex = parseInt(month, 10) - 1;
+        const monthsNames = [
+          'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+        return `${monthsNames[monthIndex]} ${year}`;
+      } catch {
+        return 'Mes Anterior';
+      }
+    };
+
+    if (!savedLastMonth) {
+      // First time setting current active month
+      localStorage.setItem('lety_last_checked_month_year', currentMonthStr);
+    } else if (savedLastMonth !== currentMonthStr) {
+      // Calendar month has rolled over!
+      setRolloverAlert({
+        show: true,
+        detectedNewMonth: currentMonthStr,
+        previousMonthLabel: getMonthNameLabelFromStr(savedLastMonth)
+      });
+    }
+  }, []);
+
   // ---------------------------------------------------------------------------
   // TRANSACTION / MUTATION ACTIONS
   // ---------------------------------------------------------------------------
@@ -332,9 +423,12 @@ export default function App() {
     setTransportBudget(1000);
     setRentAverage(7500);
     setIzziAverage(345);
-    setLuzAverage(750);
+    setLuzAverage(1500);
     setAguaAverage(400);
     setGasAverage(333);
+    setVeladorDia(120);
+    setVeladorNoche(120);
+    setLimpieza(1200);
 
     // Also reset items lists to show default parameters
     setServices(INITIAL_SERVICES);
@@ -511,7 +605,7 @@ export default function App() {
     setIsssteAppointments(prev => prev.filter(a => a.id !== id));
   };
 
-  // SAVINGS PROGRESS
+  // SAVINGS PROGRESS & MONTHLY ARCHIVES
   const handleUpdateSavings = (amount: number) => {
     setSavings(prev => {
       const nextVal = Math.max(0, prev.currentSavings + amount);
@@ -525,6 +619,115 @@ export default function App() {
       goalName,
       goalAmount
     }));
+  };
+
+  const handleAddSurplus = (weekLabel: string, amount: number) => {
+    const newSurplus: WeeklySurplus = {
+      id: 'ws_' + Math.random().toString(36).substr(2, 9),
+      weekLabel,
+      amount,
+      date: new Date().toLocaleDateString('es-MX', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    };
+    setWeeklySurpluses(prev => [newSurplus, ...prev]);
+    handleUpdateSavings(amount);
+  };
+
+  const handleDeleteSurplus = (id: string, amount: number) => {
+    setWeeklySurpluses(prev => prev.filter(item => item.id !== id));
+    handleUpdateSavings(-amount);
+  };
+
+  const handleArchiveCurrentMonth = (customMonthLabel: string) => {
+    // 1. Calculate stats of the current active parameters
+    const totalContributed = contributors.reduce((sum, c) => {
+      let count = 0;
+      if (c.w1) count += c.weeklyAmount;
+      if (c.w2) count += c.weeklyAmount;
+      if (c.w3) count += c.weeklyAmount;
+      if (c.w4) count += c.weeklyAmount;
+      return sum + count;
+    }, 0);
+
+    const totalServicesPaid = services.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+
+    let rentPaidCount = 0;
+    if (rentStates.israel) rentPaidCount++;
+    if (rentStates.ericka) rentPaidCount++;
+    if (rentStates.grandma) rentPaidCount++;
+    const rentCollected = rentPaidCount * 2500;
+
+    const weeklySurplusesTotal = weeklySurpluses.reduce((sum, item) => sum + item.amount, 0);
+
+    const now = new Date();
+    const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // 2. Put together the snapshot object
+    const archiveObj: MonthlyArchive = {
+      id: 'arch_' + Math.random().toString(36).substr(2, 9),
+      monthYear,
+      monthLabel: customMonthLabel,
+      archivedAt: new Date().toLocaleDateString('es-MX', { 
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      monthlyIncome,
+      totalContributorsPaid: totalContributed,
+      totalServicesPaid,
+      rentCollected,
+      grandmaWaterGlasses: glassCount,
+      weeklySurplusesTotal,
+      contributorsSnap: JSON.parse(JSON.stringify(contributors)),
+      servicesSnap: JSON.parse(JSON.stringify(services)),
+      rentStatesSnap: { ...rentStates },
+      savingsSnapshot: savings.currentSavings
+    };
+
+    // 3. Save into array
+    setMonthlyArchives(prev => [archiveObj, ...prev]);
+
+    // 4. RESET active trackers for a new fresh month
+    setContributors(prev => 
+      prev.map(c => ({
+        ...c,
+        w1: false,
+        w2: false,
+        w3: false,
+        w4: false
+      }))
+    );
+
+    setServices(prev => 
+      prev.map(s => ({
+        ...s,
+        isPaid: false,
+        paymentDate: undefined
+      }))
+    );
+
+    setRentStates({
+      israel: false,
+      ericka: false,
+      grandma: false
+    });
+
+    setGlassCount(0);
+    setWeeklySurpluses([]); // Leftovers are cleared for a new month!
+
+    // Save checked month to prevent double trigger
+    localStorage.setItem('lety_last_checked_month_year', monthYear);
+  };
+
+  const handleDeleteArchive = (id: string) => {
+    setMonthlyArchives(prev => prev.filter(item => item.id !== id));
   };
 
   // FAMILY MEMBERS AND CONTACTS
@@ -969,6 +1172,46 @@ export default function App() {
         {/* Core Tribute Section Banner */}
         <TributeHeader momAdvices={momAdvices} />
 
+        {/* MONTHLY ROLLOVER BANNER */}
+        {rolloverAlert.show && (
+          <div className="mb-6 p-5 rounded-3xl bg-gradient-to-r from-stone-900 to-indigo-950 border-2 border-indigo-500/30 text-white shadow-xl animate-fade-in relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+              <Calendar className="w-32 h-32 text-indigo-200" />
+            </div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+              <div className="space-y-1">
+                <span className="inline-block text-[10px] font-black tracking-widest uppercase bg-indigo-500/30 text-indigo-200 px-3 py-1 rounded-full border border-indigo-400/20">
+                  🗓️ ¡Nuevo Mes Detectado!
+                </span>
+                <h3 className="text-base font-serif font-black text-white flex items-center gap-2">
+                  Ha comenzado un nuevo ciclo mensual
+                </h3>
+                <p className="text-stone-300 text-xs leading-relaxed max-w-2xl font-sans">
+                  Para mantener las cuentas familiares claras y organizadas del mes anterior (<strong>{rolloverAlert.previousMonthLabel}</strong>), puedes archivar su reporte histórico de servicios, rentas y abonos en nuestra base de datos local y reiniciar los marcadores semanales.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 font-bold text-xs shrink-0 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    handleArchiveCurrentMonth(rolloverAlert.previousMonthLabel);
+                    setRolloverAlert(prev => ({ ...prev, show: false }));
+                  }}
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition cursor-pointer text-center"
+                >
+                  📥 Archivar y Reiniciar Mes
+                </button>
+                <button
+                  onClick={() => setRolloverAlert(prev => ({ ...prev, show: false }))}
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white rounded-xl transition cursor-pointer text-center"
+                >
+                  Omitir por ahora
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ---------------------------------------------------------------------------
          * TAB 1: PANORAMA GLOBAL (TABLERO PANORAMICO CON ALARMAS)
          * --------------------------------------------------------------------------- */}
@@ -1247,8 +1490,6 @@ export default function App() {
               setFoodBudget={setFoodBudget}
               basicsBudget={basicsBudget}
               setBasicsBudget={setBasicsBudget}
-              savingsAlloc={savingsAlloc}
-              setSavingsAlloc={setSavingsAlloc}
               transportBudget={transportBudget}
               setTransportBudget={setTransportBudget}
               rentAverage={rentAverage}
@@ -1261,6 +1502,12 @@ export default function App() {
               setAguaAverage={setAguaAverage}
               gasAverage={gasAverage}
               setGasAverage={setGasAverage}
+              veladorDia={veladorDia}
+              setVeladorDia={setVeladorDia}
+              veladorNoche={veladorNoche}
+              setVeladorNoche={setVeladorNoche}
+              limpieza={limpieza}
+              setLimpieza={setLimpieza}
               onResetDefaults={handleResetDefaults}
               currentUser={currentUser}
             />
@@ -1356,6 +1603,12 @@ export default function App() {
             savings={savings}
             onUpdateSavings={handleUpdateSavings}
             onUpdateGoal={handleUpdateGoal}
+            weeklySurpluses={weeklySurpluses}
+            onAddSurplus={handleAddSurplus}
+            onDeleteSurplus={handleDeleteSurplus}
+            monthlyArchives={monthlyArchives}
+            onArchiveCurrentMonth={handleArchiveCurrentMonth}
+            onDeleteArchive={handleDeleteArchive}
           />
         )}
 
@@ -1387,6 +1640,21 @@ export default function App() {
             onAddBirthday={handleAddBirthday}
             onDeleteBirthday={handleDeleteBirthday}
             initialSection={activeProfileSubTab}
+            monthlyIncome={monthlyIncome}
+            foodBudget={foodBudget}
+            basicsBudget={basicsBudget}
+            transportBudget={transportBudget}
+            rentAverage={rentAverage}
+            izziAverage={izziAverage}
+            luzAverage={luzAverage}
+            aguaAverage={aguaAverage}
+            gasAverage={gasAverage}
+            veladorDia={veladorDia}
+            veladorNoche={veladorNoche}
+            limpieza={limpieza}
+            shoppingItems={shoppingItems}
+            savingsAlloc={savingsAlloc}
+            setSavingsAlloc={setSavingsAlloc}
           />
         )}
       </main>
