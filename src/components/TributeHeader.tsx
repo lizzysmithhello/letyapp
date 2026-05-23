@@ -95,7 +95,7 @@ export default function TributeHeader({ momAdvices = [] }: TributeHeaderProps) {
           </div>
 
           <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-sans font-medium max-w-3xl">
-            Inspirada con amor infinito en la memoria de <strong className="font-extrabold text-stone-850">Leticia Rodríguez Escalante (1964 - 2026)</strong>. Un rincón digital inteligente y muy familiar diseñado para guiar de forma amable el presupuesto del hogar, planificar la despensa familiar contra la inflación y cuidar de la salud de nuestra abuela Esperanza con la calidez con la que solo lo haría una madre.
+            Inspirada con amor infinito en la memoria de <strong className="font-extrabold text-stone-850">Leticia Rodríguez Escalante (1964 - 2026)</strong>. Un rincón digital inteligente y muy familiar diseñado para guiar de forma amable el presupuesto del hogar, planificar la despensa familiar contra la inflación y cuidar de la salud de nuestra abuela Esperanza.
           </p>
 
           {/* Interactive Advice/Apapacho container */}
