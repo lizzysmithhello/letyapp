@@ -908,7 +908,7 @@ export default function RecipesPanel({ currentUser }: { currentUser: any }) {
   const [newRecTips, setNewRecTips] = useState('');
 
   // Permission level check (Erika/Administrador)
-  const canEditAndSave = currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
+  const canEditAndSave = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
 
   useEffect(() => {
     localStorage.setItem('lety_custom_recipes', JSON.stringify(customRecipes));

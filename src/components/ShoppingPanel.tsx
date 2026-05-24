@@ -19,6 +19,7 @@ interface ShoppingPanelProps {
   // recommended limits for visual alerts
   foodBudgetLimit?: number;
   basicsBudgetLimit?: number;
+  isAdmin?: boolean;
 }
 
 export default function ShoppingPanel({
@@ -30,7 +31,8 @@ export default function ShoppingPanel({
   onUpdateItem,
   onAddStoreRecommendation,
   foodBudgetLimit = 6200,
-  basicsBudgetLimit = 1200
+  basicsBudgetLimit = 1200,
+  isAdmin = false
 }: ShoppingPanelProps) {
   // Add new grocery item state
   const [name, setName] = useState('');
@@ -205,71 +207,78 @@ export default function ShoppingPanel({
         </div>
 
         {/* INPUT FORM: ADD DIRECT DESPENSA ITEM */}
-        <div className="bg-white border hover:border-stone-300 p-4 rounded-3xl shadow-xs">
-          <form onSubmit={handleAddItemSubmit} className="space-y-3">
-            <h3 className="text-xs font-black text-stone-700 uppercase tracking-wider flex items-center gap-1">
-              ➕ Añadir Producto a la Despensa
-            </h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-              <div className="sm:col-span-5">
-                <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Nombre del artículo</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Plátano Tabasco, Detergente polvo"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full text-xs font-semibold border-2 border-stone-150 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-emerald-400"
-                />
-              </div>
+        {isAdmin ? (
+          <div className="bg-white border hover:border-stone-300 p-4 rounded-3xl shadow-xs">
+            <form onSubmit={handleAddItemSubmit} className="space-y-3">
+              <h3 className="text-xs font-black text-stone-700 uppercase tracking-wider flex items-center gap-1">
+                ➕ Añadir Producto a la Despensa
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                <div className="sm:col-span-12 md:col-span-5">
+                  <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Nombre del artículo</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Plátano Tabasco, Detergente polvo"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full text-xs font-semibold border-2 border-stone-150 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Cantidad / Unidad</label>
-                <input
-                  type="text"
-                  placeholder="Ej. 12 kg, 4 botes"
-                  value={qty}
-                  onChange={(e) => setQty(e.target.value)}
-                  className="w-full text-xs font-mono font-bold text-center border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400"
-                />
-              </div>
+                <div className="sm:col-span-4 md:col-span-2">
+                  <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Cantidad / Unidad</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 12 kg, 4 botes"
+                    value={qty}
+                    onChange={(e) => setQty(e.target.value)}
+                    className="w-full text-xs font-mono font-bold text-center border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Precio Estimado ($)</label>
-                <input
-                  type="number"
-                  placeholder="Ej. 95"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-full text-xs font-mono font-bold text-center border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400"
-                />
-              </div>
+                <div className="sm:col-span-4 md:col-span-2">
+                  <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Precio Estimado ($)</label>
+                  <input
+                    type="number"
+                    placeholder="Ej. 95"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className="w-full text-xs font-mono font-bold text-center border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
 
-              <div className="sm:col-span-2">
-                <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Categoría</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as 'comida' | 'hogar')}
-                  className="w-full text-xs font-bold border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400 cursor-pointer"
-                >
-                  <option value="comida">🥗 Comida</option>
-                  <option value="hogar">🧼 Hogar</option>
-                </select>
-              </div>
+                <div className="sm:col-span-4 md:col-span-2">
+                  <label className="block text-[10px] font-extrabold text-stone-400 uppercase mb-1">Categoría</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as 'comida' | 'hogar')}
+                    className="w-full text-xs font-bold border-2 border-stone-150 rounded-xl px-2 py-2 bg-white focus:outline-none focus:border-emerald-400 cursor-pointer"
+                  >
+                    <option value="comida">🥗 Comida</option>
+                    <option value="hogar">🧼 Hogar</option>
+                  </select>
+                </div>
 
-              <div className="sm:col-span-1">
-                <button
-                  type="submit"
-                  className="w-full h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
-                  title="Agregar artículo"
-                >
-                  <Plus className="w-5 h-5 stroke-[2.5]" />
-                </button>
+                <div className="sm:col-span-1">
+                  <button
+                    type="submit"
+                    className="w-full h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
+                    title="Agregar artículo"
+                  >
+                    <Plus className="w-5 h-5 stroke-[2.5]" />
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        ) : (
+          <div className="bg-stone-50 border border-stone-200/80 p-4 rounded-3xl text-xs font-bold text-stone-600 flex items-center gap-2 select-none shadow-3xs">
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span>🔒 Modo de Consulta: Solo Ericka edita productos de despensa</span>
+          </div>
+        )}
 
         {/* SECTION A: DESPENSA COMIDA 🥗 */}
         <div className="bg-white border-2 border-stone-150 rounded-3xl p-5 sm:p-6 shadow-md flex flex-col">
@@ -337,8 +346,8 @@ export default function ShoppingPanel({
                     </div>
                   ) : (
                     <div 
-                      onClick={() => onToggleItemBought(item.id)}
-                      className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                      onClick={() => isAdmin && onToggleItemBought(item.id)}
+                      className={`flex items-center gap-3 flex-1 min-w-0 ${isAdmin ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'}`}
                     >
                       {item.isBought ? (
                         <CheckSquare className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -359,43 +368,45 @@ export default function ShoppingPanel({
                   )}
 
                   {/* Commands */}
-                  <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
-                    {editingId === item.id ? (
-                      <>
-                        <button
-                          onClick={() => handleSaveEdit(item.id)}
-                          className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
-                          title="Guardar"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="p-1 text-stone-400 hover:bg-stone-100 rounded-lg cursor-pointer"
-                          title="Cancelar"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleStartEdit(item)}
-                          className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteItem(item.id)}
-                          className="p-1 text-stone-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
+                      {editingId === item.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveEdit(item.id)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
+                            title="Guardar"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-1 text-stone-400 hover:bg-stone-100 rounded-lg cursor-pointer"
+                            title="Cancelar"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleStartEdit(item)}
+                            className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteItem(item.id)}
+                            className="p-1 text-stone-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -468,8 +479,8 @@ export default function ShoppingPanel({
                     </div>
                   ) : (
                     <div 
-                      onClick={() => onToggleItemBought(item.id)}
-                      className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                      onClick={() => isAdmin && onToggleItemBought(item.id)}
+                      className={`flex items-center gap-3 flex-1 min-w-0 ${isAdmin ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'}`}
                     >
                       {item.isBought ? (
                         <CheckSquare className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -490,39 +501,41 @@ export default function ShoppingPanel({
                   )}
 
                   {/* Commands */}
-                  <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
-                    {editingId === item.id ? (
-                      <>
-                        <button
-                          onClick={() => handleSaveEdit(item.id)}
-                          className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="p-1 text-stone-400 hover:bg-stone-100 rounded-lg cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleStartEdit(item)}
-                          className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteItem(item.id)}
-                          className="p-1 text-stone-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-1.5 ml-auto pl-2 shrink-0">
+                      {editingId === item.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveEdit(item.id)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-lg cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="p-1 text-stone-400 hover:bg-stone-100 rounded-lg cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleStartEdit(item)}
+                            className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteItem(item.id)}
+                            className="p-1 text-stone-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -545,13 +558,17 @@ export default function ShoppingPanel({
               <p className="text-[10px] text-stone-500 mt-0.5 font-medium">Lugares ideales para surtir al mejor precio</p>
             </div>
 
-            <button
-              onClick={() => setShowStoreForm(!showStoreForm)}
-              className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-amber-100/80 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Nueva Tienda
-            </button>
+            {isAdmin ? (
+              <button
+                onClick={() => setShowStoreForm(!showStoreForm)}
+                className="px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-amber-100/80 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Nueva Tienda
+              </button>
+            ) : (
+              <span className="text-stone-400 font-bold text-[10px]">🔒 Vista</span>
+            )}
           </div>
 
           {showStoreForm && (

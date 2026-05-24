@@ -100,6 +100,10 @@ export default function App() {
     }
   }, [currentUser]);
 
+  const isAdmin = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || 
+                  currentUser?.name?.toLowerCase().trim().includes('ericka') || 
+                  currentUser?.name?.toLowerCase().trim().includes('erika');
+
   // --- HOME PARAMETER STATES (EDITABLE) ---
   const [grandmaName, setGrandmaName] = useState(() => {
     return localStorage.getItem('lety_grandma_name') || 'Esperanza';
@@ -1527,6 +1531,7 @@ export default function App() {
                   onDeleteContributor={handleDeleteContributor}
                   totalPaidServices={paidServicesSum}
                   monthlyBudgetGoal={monthlyIncome}
+                  isAdmin={isAdmin}
                 />
               </div>
 
@@ -1535,6 +1540,7 @@ export default function App() {
                   rentStates={rentStates}
                   onToggleRent={handleToggleRent}
                   monthlyBudgetGoal={monthlyIncome}
+                  isAdmin={isAdmin}
                 />
               </div>
               
@@ -1544,6 +1550,7 @@ export default function App() {
                   onAddService={handleAddService}
                   onToggleServicePaid={handleToggleServicePaid}
                   onDeleteService={handleDeleteService}
+                  isAdmin={isAdmin}
                 />
               </div>
             </div>
@@ -1564,6 +1571,7 @@ export default function App() {
             onAddStoreRecommendation={handleAddStoreRecommendation}
             foodBudgetLimit={foodBudget}
             basicsBudgetLimit={basicsBudget}
+            isAdmin={isAdmin}
           />
         )}
 
@@ -1585,6 +1593,7 @@ export default function App() {
             onAddAppointment={handleAddAppointment}
             onToggleAppointment={handleToggleAppointment}
             onDeleteAppointment={handleDeleteAppointment}
+            isAdmin={isAdmin}
           />
         )}
 
@@ -1609,6 +1618,7 @@ export default function App() {
             monthlyArchives={monthlyArchives}
             onArchiveCurrentMonth={handleArchiveCurrentMonth}
             onDeleteArchive={handleDeleteArchive}
+            isAdmin={isAdmin}
           />
         )}
 

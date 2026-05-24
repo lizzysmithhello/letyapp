@@ -12,6 +12,7 @@ interface ServicesPanelProps {
   onAddService: (name: string, amount: number, dueDate: string) => void;
   onToggleServicePaid: (id: string) => void;
   onDeleteService: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function ServicesPanel({
@@ -19,6 +20,7 @@ export default function ServicesPanel({
   onAddService,
   onToggleServicePaid,
   onDeleteService,
+  isAdmin = false
 }: ServicesPanelProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -87,6 +89,7 @@ export default function ServicesPanel({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     if (!name.trim() || !amount || !dueDate) return;
     onAddService(name, parseFloat(amount), dueDate);
     setName('');
@@ -106,13 +109,19 @@ export default function ServicesPanel({
           <p className="text-stone-500 text-xs mt-0.5">Control de fechas límites, alertas mecánicas y cobros</p>
         </div>
         
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 rounded-xl border border-rose-100 hover:border-rose-200 bg-rose-50 hover:bg-rose-100/70 text-rose-700 text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
-        >
-          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          Nuevo Servicio
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-3 py-1.5 rounded-xl border border-rose-100 hover:border-rose-200 bg-rose-50 hover:bg-rose-100/70 text-rose-700 text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            Nuevo Servicio
+          </button>
+        ) : (
+          <div className="text-stone-500 bg-stone-50 border border-stone-150 text-[10px] font-bold py-1 px-2.5 rounded-lg">
+            <span>🔒 Solo Ericka edita servicios</span>
+          </div>
+        )}
       </div>
 
       <div className="text-stone-500 text-[11px] mb-4 bg-amber-50/50 border border-amber-200/40 p-2 rounded-xl flex items-center gap-1.5">
@@ -197,13 +206,15 @@ export default function ServicesPanel({
                   <div className="flex items-start gap-3">
                     {/* Paid toggle checkbox button */}
                     <button
-                      onClick={() => onToggleServicePaid(service.id)}
-                      className={`mt-1 h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                      onClick={() => isAdmin && onToggleServicePaid(service.id)}
+                      className={`mt-1 h-5 w-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                        isAdmin ? 'cursor-pointer hover:border-emerald-500' : 'cursor-not-allowed opacity-60'
+                      } ${
                         service.isPaid 
                           ? 'bg-emerald-600 border-emerald-600 text-white' 
-                          : 'border-stone-400 bg-white hover:border-stone-600 text-transparent'
+                          : 'border-stone-400 bg-white text-transparent'
                       }`}
-                      title={service.isPaid ? "Marcar como pendiente" : "Marcar como pagado"}
+                      title={!isAdmin ? "Solo lectura" : (service.isPaid ? "Marcar como pendiente" : "Marcar como pagado")}
                     >
                       <svg className="h-3.5 w-3.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -238,13 +249,15 @@ export default function ServicesPanel({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => onDeleteService(service.id)}
-                    className="p-1 px-1.5 text-stone-400 hover:text-rose-600 rounded-md hover:bg-rose-100/30 shrink-0 transition cursor-pointer"
-                    title="Eliminar este servicio"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => onDeleteService(service.id)}
+                      className="p-1 px-1.5 text-stone-400 hover:text-rose-600 rounded-md hover:bg-rose-100/30 shrink-0 transition cursor-pointer"
+                      title="Eliminar este servicio"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );

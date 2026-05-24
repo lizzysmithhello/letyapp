@@ -104,7 +104,7 @@ export default function UserProfileAndSettings({
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
 
   // User authorization constraint check
-  const canEdit = currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
+  const canEdit = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
 
   const handleCreatePhrase = (e: React.FormEvent) => {
     e.preventDefault();

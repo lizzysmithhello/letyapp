@@ -77,7 +77,7 @@ export default function HouseholdSettingsPanel({
   const [isEditing, setIsEditing] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const canEdit = currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
+  const canEdit = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
   
   // Local state for temporary inputs
   const [tempGrName, setTempGrName] = useState(grandmaName);

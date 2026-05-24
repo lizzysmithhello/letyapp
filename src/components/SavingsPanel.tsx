@@ -38,6 +38,7 @@ interface SavingsPanelProps {
   monthlyArchives: MonthlyArchive[];
   onArchiveCurrentMonth: (customLabel: string) => void;
   onDeleteArchive: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export default function SavingsPanel({
@@ -49,7 +50,8 @@ export default function SavingsPanel({
   onDeleteSurplus,
   monthlyArchives,
   onArchiveCurrentMonth,
-  onDeleteArchive
+  onDeleteArchive,
+  isAdmin = false
 }: SavingsPanelProps) {
   // Configured target inputs
   const [amountInput, setAmountInput] = useState('');
@@ -139,21 +141,29 @@ export default function SavingsPanel({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={openQuickClose}
-              className="px-3 py-1.5 rounded-xl bg-indigo-50 border-2 border-indigo-100 text-indigo-700 text-xs font-black flex items-center gap-1.5 cursor-pointer hover:bg-indigo-100/70 transition-all active:scale-95"
-              title="Hacer corte manual y archivar mes actual"
-            >
-              <Archive className="w-4 h-4 text-indigo-600" />
-              Corte del Mes
-            </button>
-            <button
-              onClick={() => setShowConfig(!showConfig)}
-              className="px-3 py-1.5 rounded-xl border-2 border-stone-150 bg-stone-50 text-stone-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-stone-100 transition-all active:scale-95"
-            >
-              <Target className="w-4 h-4 text-rose-500" />
-              Configurar Meta
-            </button>
+            {isAdmin ? (
+              <>
+                <button
+                  onClick={openQuickClose}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-50 border-2 border-indigo-100 text-indigo-700 text-xs font-black flex items-center gap-1.5 cursor-pointer hover:bg-indigo-100/70 transition-all active:scale-95"
+                  title="Hacer corte manual y archivar mes actual"
+                >
+                  <Archive className="w-4 h-4 text-indigo-600" />
+                  Corte del Mes
+                </button>
+                <button
+                  onClick={() => setShowConfig(!showConfig)}
+                  className="px-3 py-1.5 rounded-xl border-2 border-stone-150 bg-stone-50 text-stone-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-stone-100 transition-all active:scale-95"
+                >
+                  <Target className="w-4 h-4 text-rose-500" />
+                  Configurar Meta
+                </button>
+              </>
+            ) : (
+              <span className="text-stone-400 font-bold text-xs bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-200">
+                🔒 Solo Ericka configura meta y hace cortes
+              </span>
+            )}
           </div>
         </div>
 
@@ -311,108 +321,118 @@ export default function SavingsPanel({
 
           {/* RIGHT COLUMN: Deposits and Manual Weekly leftover handling */}
           <div className="lg:col-span-6 space-y-4">
-            
-            {/* SECTION 1: MANUALLY DEPOSIT WEEKLY LEFTOVER */}
-            <div className="bg-gradient-to-br from-indigo-50/20 to-white p-5 rounded-2xl border-2 border-indigo-100 flex flex-col justify-between shadow-xs">
-              <div>
-                <h3 className="text-xs font-extrabold text-indigo-950 uppercase tracking-widest flex items-center gap-1.5 mb-1 animate-pulse">
-                  <DollarSign className="w-4 h-4 text-indigo-600" />
-                  Abonar Sobrante de Presupuesto
-                </h3>
-                <p className="text-[11px] text-stone-500 mb-4 font-sans leading-relaxed">
-                  ¿Sobró dinero de la despensa o servicios esta semana? Regístralo aquí manualmente para inyectarlo en directo a la alcancía.
-                </p>
-              </div>
-
-              <form onSubmit={handleAddSurplusSubmit} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+            {isAdmin ? (
+              <>
+                {/* SECTION 1: MANUALLY DEPOSIT WEEKLY LEFTOVER */}
+                <div className="bg-gradient-to-br from-indigo-50/20 to-white p-5 rounded-2xl border-2 border-indigo-100 flex flex-col justify-between shadow-xs">
                   <div>
-                    <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Semana Correspondiente</label>
-                    <select
-                      value={surplusWeek}
-                      onChange={(e) => setSurplusWeek(e.target.value)}
-                      className="w-full text-xs font-bold border border-stone-250 rounded-xl px-2.5 py-2.5 bg-white text-stone-800 focus:outline-none focus:border-indigo-400"
-                    >
-                      <option value="Semana 1">Semana 1</option>
-                      <option value="Semana 2">Semana 2</option>
-                      <option value="Semana 3">Semana 3</option>
-                      <option value="Semana 4">Semana 4</option>
-                      <option value="Otro / Extra">Otro / Extra</option>
-                    </select>
+                    <h3 className="text-xs font-extrabold text-indigo-950 uppercase tracking-widest flex items-center gap-1.5 mb-1 animate-pulse">
+                      <DollarSign className="w-4 h-4 text-indigo-600" />
+                      Abonar Sobrante de Presupuesto
+                    </h3>
+                    <p className="text-[11px] text-stone-500 mb-4 font-sans leading-relaxed">
+                      ¿Sobró dinero de la despensa o servicios esta semana? Regístralo aquí manualmente para inyectarlo en directo a la alcancía.
+                    </p>
                   </div>
 
+                  <form onSubmit={handleAddSurplusSubmit} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Semana Correspondiente</label>
+                        <select
+                          value={surplusWeek}
+                          onChange={(e) => setSurplusWeek(e.target.value)}
+                          className="w-full text-xs font-bold border border-stone-250 rounded-xl px-2.5 py-2.5 bg-white text-stone-800 focus:outline-none focus:border-indigo-400"
+                        >
+                          <option value="Semana 1">Semana 1</option>
+                          <option value="Semana 2">Semana 2</option>
+                          <option value="Semana 3">Semana 3</option>
+                          <option value="Semana 4">Semana 4</option>
+                          <option value="Otro / Extra">Otro / Extra</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Sobrante ($ MXN)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            step="any"
+                            placeholder="Ej. 450"
+                            value={surplusAmountInput}
+                            onChange={(e) => setSurplusAmountInput(e.target.value)}
+                            className="w-full text-xs font-mono font-bold border border-stone-250 rounded-xl pl-6 pr-3 py-2.5 bg-white focus:outline-none focus:border-indigo-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:shadow-indigo-100 transition-all active:scale-98 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                      Guardar Sobrante en Ahorros
+                    </button>
+                  </form>
+                </div>
+
+                {/* SECTION 2: REGULAR DEPOSIT / WITHDRAW */}
+                <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 flex flex-col gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-widest mb-1">Sobrante ($ MXN)</label>
-                    <div className="relative">
+                    <h4 className="text-[11px] font-black text-stone-700 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Minus className="w-3.5 h-3.5 text-stone-500" />
+                      Retirar / Ajustar Manualmente
+                    </h4>
+                    <p className="text-[10px] text-stone-450 mt-0.5">Retira efectivo de la reserva para cubrir una emergencia imprevista.</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
                       <input
                         type="number"
-                        required
                         min="1"
-                        step="any"
-                        placeholder="Ej. 450"
-                        value={surplusAmountInput}
-                        onChange={(e) => setSurplusAmountInput(e.target.value)}
-                        className="w-full text-xs font-mono font-bold border border-stone-250 rounded-xl pl-6 pr-3 py-2.5 bg-white focus:outline-none focus:border-indigo-400"
+                        placeholder="Monto"
+                        value={amountInput}
+                        onChange={(e) => setAmountInput(e.target.value)}
+                        className="w-full text-xs font-mono font-bold border border-stone-250 rounded-xl pl-6 pr-3 py-2 bg-white text-stone-850"
                       />
+                    </div>
+
+                    <div className="flex gap-1.5 font-bold">
+                      <button
+                        type="button"
+                        onClick={() => handleSavingsChange(false)}
+                        className="px-3.5 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs shrink-0 transition"
+                        title="Retirar de los ahorros familiares"
+                      >
+                        Retirar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSavingsChange(true)}
+                        className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs shrink-0 transition"
+                        title="Inyectar a ahorros generales"
+                      >
+                        Depositar
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm hover:shadow-indigo-100 transition-all active:scale-98 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
-                  Guardar Sobrante en Ahorros
-                </button>
-              </form>
-            </div>
-
-            {/* SECTION 2: REGULAR DEPOSIT / WITHDRAW */}
-            <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 flex flex-col gap-3">
-              <div>
-                <h4 className="text-[11px] font-black text-stone-700 flex items-center gap-1.5 uppercase tracking-wider">
-                  <Minus className="w-3.5 h-3.5 text-stone-500" />
-                  Retirar / Ajustar Manualmente
-                </h4>
-                <p className="text-[10px] text-stone-450 mt-0.5">Retira efectivo de la reserva para cubrir una emergencia imprevista.</p>
+              </>
+            ) : (
+              <div className="bg-stone-50 border border-stone-200 p-5 rounded-2xl flex flex-col items-center justify-center text-center text-stone-500 py-12">
+                <span className="text-3xl mb-2">🔒</span>
+                <p className="font-serif font-black text-sm text-stone-800">Sección Protegida para Ericka</p>
+                <p className="text-xs text-stone-500 mt-1 max-w-sm">
+                  Los abonos por sobrantes semanales, retiros de emergencia o modificaciones manuales en la alcancía solo pueden ser gestionados por la administradora.
+                </p>
               </div>
-
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-xs font-bold">$</span>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Monto"
-                    value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
-                    className="w-full text-xs font-mono font-bold border border-stone-250 rounded-xl pl-6 pr-3 py-2 bg-white text-stone-850"
-                  />
-                </div>
-
-                <div className="flex gap-1.5 font-bold">
-                  <button
-                    type="button"
-                    onClick={() => handleSavingsChange(false)}
-                    className="px-3.5 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs shrink-0 transition"
-                    title="Retirar de los ahorros familiares"
-                  >
-                    Retirar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSavingsChange(true)}
-                    className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs shrink-0 transition"
-                    title="Inyectar a ahorros generales"
-                  >
-                    Depositar
-                  </button>
-                </div>
-              </div>
-            </div>
-
+            )}
           </div>
         </div>
 
@@ -447,18 +467,20 @@ export default function SavingsPanel({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(`¿Quitar el sobrante de $${item.amount} de ${item.weekLabel} y restarlo de la alcancía?`)) {
-                        onDeleteSurplus(item.id, item.amount);
-                      }
-                    }}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition flex items-center gap-1"
-                    title="Eliminar este sobrante (restará del total)"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`¿Quitar el sobrante de $${item.amount} de ${item.weekLabel} y restarlo de la alcancía?`)) {
+                          onDeleteSurplus(item.id, item.amount);
+                        }
+                      }}
+                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition flex items-center gap-1"
+                      title="Eliminar este sobrante (restará del total)"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -542,19 +564,21 @@ export default function SavingsPanel({
 
                       {/* Expand indicator and delete */}
                       <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm(`¿Seguro que quieres borrar permanentemente del historial el mes de "${archive.monthLabel}"?`)) {
-                              onDeleteArchive(archive.id);
-                            }
-                          }}
-                          className="p-1 px-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
-                          title="Eliminar este mes archivado"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`¿Seguro que quieres borrar permanentemente del historial el mes de "${archive.monthLabel}"?`)) {
+                                onDeleteArchive(archive.id);
+                              }
+                            }}
+                            className="p-1 px-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                            title="Eliminar este mes archivado"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         <div className="text-stone-450 p-1 bg-stone-50 rounded-lg group-hover:bg-stone-100">
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </div>

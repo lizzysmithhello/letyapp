@@ -16,12 +16,14 @@ interface RentPanelProps {
   rentStates: RentStates;
   onToggleRent: (person: 'israel' | 'ericka' | 'grandma') => void;
   monthlyBudgetGoal: number;
+  isAdmin?: boolean;
 }
 
 export default function RentPanel({
   rentStates,
   onToggleRent,
-  monthlyBudgetGoal
+  monthlyBudgetGoal,
+  isAdmin = false
 }: RentPanelProps) {
   const amountPerPerson = 2500;
   const totalRentGoal = 7500;
@@ -81,7 +83,10 @@ export default function RentPanel({
       </div>
 
       {/* Detailed Checkboxes */}
-      <div className="space-y-3 flex-1">
+      <div className={`space-y-3 flex-1 ${!isAdmin ? 'pointer-events-none opacity-80' : ''}`}>
+        <div className="flex justify-between items-center bg-stone-50 border border-stone-200/60 rounded-xl px-3 py-1.5 text-stone-500 text-[10px] font-bold">
+          <span>{isAdmin ? '🔧 Puedes marcar aportes' : '🔒 Solo Ericka puede registrar aportes'}</span>
+        </div>
         <span className="block text-[10px] uppercase font-extrabold text-stone-400 tracking-wider">
           Aportes Individuales
         </span>

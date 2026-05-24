@@ -40,6 +40,7 @@ interface HealthPanelProps {
   onAddAppointment: (date: string, time: string, specialty: string, doctor: string, notes?: string) => void;
   onToggleAppointment: (id: string) => void;
   onDeleteAppointment: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 type HealthSubTab = 'tension' | 'medicamentos' | 'citas';
@@ -58,6 +59,7 @@ export default function HealthPanel({
   onAddAppointment,
   onToggleAppointment,
   onDeleteAppointment,
+  isAdmin = false,
 }: HealthPanelProps) {
   const [activeSubTab, setActiveSubTab] = useState<HealthSubTab>('medicamentos');
 
@@ -255,13 +257,17 @@ export default function HealthPanel({
                 <button
                   key={i}
                   id={`glass-water-${i}`}
-                  onClick={() => handleScaleGlass(i)}
-                  className={`w-8 h-8 rounded-lg font-bold text-sm flex items-center justify-center transition-all cursor-pointer shadow-sm select-none ${
+                  onClick={() => isAdmin && handleScaleGlass(i)}
+                  className={`w-8 h-8 rounded-lg font-bold text-sm flex items-center justify-center transition-all shadow-sm select-none ${
+                    isAdmin 
+                      ? 'cursor-pointer' 
+                      : 'cursor-not-allowed opacity-75'
+                  } ${
                     i <= glassCount 
                       ? 'bg-blue-600 text-white scale-105 shadow-md shadow-blue-600/10' 
                       : 'bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-300 hover:text-blue-500 hover:border-blue-300'
                   }`}
-                  title={`${i} Vaso de Agua`}
+                  title={!isAdmin ? "Solo lectura" : `${i} Vaso de Agua`}
                 >
                   🥛
                 </button>
@@ -277,7 +283,10 @@ export default function HealthPanel({
           </div>
         ) : (
           <div className="mt-2 text-[10px] text-stone-400 italic">
-            * Haz clic en el vaso correspondiente para actualizar la hidratación consumida.
+            {isAdmin 
+              ? "* Haz clic en el vaso correspondiente para actualizar la hidratación consumida." 
+              : "🔒 Solo Ericka edita e incrementa los vasos de agua."
+            }
           </div>
         )}
       </div>
@@ -344,13 +353,17 @@ export default function HealthPanel({
                 <h3 className="text-base font-serif font-semibold text-stone-800 flex items-center gap-1.5">
                   📁 Registrar Recetado
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => setShowMedForm(!showMedForm)}
-                  className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100 text-xs font-bold cursor-pointer hover:bg-emerald-100"
-                >
-                  {showMedForm ? 'Cerrar' : '+ Añadir'}
-                </button>
+                {isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowMedForm(!showMedForm)}
+                    className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100 text-xs font-bold cursor-pointer hover:bg-emerald-100"
+                  >
+                    {showMedForm ? 'Cerrar' : '+ Añadir'}
+                  </button>
+                ) : (
+                  <span className="text-stone-400 font-bold text-[10px]">🔒 Solo Ericka</span>
+                )}
               </div>
 
               {!showMedForm ? (
@@ -514,16 +527,18 @@ export default function HealthPanel({
                         </div>
                       </div>
 
-                      <div className="flex md:flex-col justify-end items-end shrink-0 gap-2 border-t md:border-t-0 border-stone-100 pt-2 md:pt-0">
-                        <button
-                          onClick={() => onDeleteMedicine(med.id)}
-                          className="p-1.5 px-2.5 text-stone-400 hover:text-rose-705 bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-150 rounded-xl text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
-                          title="Quitar medicamento"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span className="md:hidden">Quitar</span>
-                        </button>
-                      </div>
+                      {isAdmin && (
+                        <div className="flex md:flex-col justify-end items-end shrink-0 gap-2 border-t md:border-t-0 border-stone-100 pt-2 md:pt-0">
+                          <button
+                            onClick={() => onDeleteMedicine(med.id)}
+                            className="p-1.5 px-2.5 text-stone-400 hover:text-rose-705 bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-150 rounded-xl text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+                            title="Quitar medicamento"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="md:hidden">Quitar</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -541,12 +556,16 @@ export default function HealthPanel({
                 <h3 className="text-base font-serif font-bold text-stone-850 flex items-center gap-1.5">
                   🏥 Añadir Cita ISSSTE
                 </h3>
-                <button
-                  onClick={() => setShowApptForm(!showApptForm)}
-                  className="px-2 py-1 rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 cursor-pointer"
-                >
-                  {showApptForm ? 'Ver Tips' : '+ Registrar'}
-                </button>
+                {isAdmin ? (
+                  <button
+                    onClick={() => setShowApptForm(!showApptForm)}
+                    className="px-2 py-1 rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 cursor-pointer"
+                  >
+                    {showApptForm ? 'Ver Tips' : '+ Registrar'}
+                  </button>
+                ) : (
+                  <span className="text-stone-400 font-bold text-[10px]">🔒 Solo Ericka</span>
+                )}
               </div>
 
               {!showApptForm ? (
@@ -692,14 +711,16 @@ export default function HealthPanel({
                           <div className="flex items-start gap-3">
                             <button
                               id={`toggle-appt-${appt.id}`}
-                              onClick={() => onToggleAppointment(appt.id)}
-                              className="w-6 h-6 rounded-lg bg-stone-50 border border-stone-200 hover:border-emerald-400 flex items-center justify-center shrink-0 cursor-pointer text-stone-300 hover:text-emerald-650 hover:bg-emerald-50 mt-1 transition"
-                              title="Marcar cita asistida / completada"
+                              onClick={() => isAdmin && onToggleAppointment(appt.id)}
+                              className={`w-6 h-6 rounded-lg bg-stone-50 border border-stone-200 flex items-center justify-center shrink-0 text-stone-300 mt-1 transition ${
+                                isAdmin ? 'cursor-pointer hover:border-emerald-400 hover:text-emerald-650 hover:bg-emerald-50' : 'cursor-not-allowed opacity-60'
+                              }`}
+                              title={!isAdmin ? "Solo lectura" : "Marcar cita asistida / completada"}
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
 
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="p-0.5 px-2 bg-indigo-100 text-indigo-900 text-[10px] font-black uppercase rounded-lg">
                                   {appt.specialty}
@@ -724,13 +745,15 @@ export default function HealthPanel({
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => onDeleteAppointment(appt.id)}
-                            className="p-1 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50/50 opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                            title="Eliminar registro de cita"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => onDeleteAppointment(appt.id)}
+                              className="p-1 text-stone-400 hover:text-rose-600 rounded-lg hover:bg-rose-50/50 opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                              title="Eliminar registro de cita"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))
                     )}
@@ -752,15 +775,17 @@ export default function HealthPanel({
                           <div className="flex items-center gap-2.5">
                             <button
                               id={`toggle-appt-completed-${appt.id}`}
-                              onClick={() => onToggleAppointment(appt.id)}
-                              className="w-5 h-5 rounded-full bg-emerald-100 border border-emerald-250 flex items-center justify-center shrink-0 cursor-pointer text-emerald-700 hover:bg-stone-50 hover:text-stone-300 transition"
-                              title="Regresar a pendientes"
+                              onClick={() => isAdmin && onToggleAppointment(appt.id)}
+                              className={`w-5 h-5 rounded-full bg-emerald-100 border border-emerald-250 flex items-center justify-center shrink-0 text-emerald-700 transition ${
+                                isAdmin ? 'cursor-pointer hover:bg-stone-50 hover:text-stone-300' : 'cursor-not-allowed opacity-60'
+                              }`}
+                              title={!isAdmin ? "Solo lectura" : "Regresar a pendientes"}
                             >
                               <CheckCircle className="w-3.5 h-3.5" />
                             </button>
 
                             <div>
-                              <p className="text-xs font-bold text-stone-700 flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-stone-700 flex items-center gap-1.5 flex-wrap">
                                 <span className="line-through text-stone-500">{appt.specialty}</span>
                                 <span className="text-[9px] px-1 bg-stone-200 text-stone-600 rounded font-normal font-mono">Asistio</span>
                               </p>
@@ -770,12 +795,14 @@ export default function HealthPanel({
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => onDeleteAppointment(appt.id)}
-                            className="p-1 text-stone-300 hover:text-rose-600 rounded cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => onDeleteAppointment(appt.id)}
+                              className="p-1 text-stone-300 hover:text-rose-600 rounded cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -796,12 +823,16 @@ export default function HealthPanel({
                   <h3 className="text-base font-serif font-bold text-stone-850">
                     ❤️ Toma de Presión
                   </h3>
-                  <button
-                    onClick={() => setShowBpForm(!showBpForm)}
-                    className="px-2 py-1 rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-850 text-xs font-semibold cursor-pointer hover:bg-emerald-100"
-                  >
-                    {showBpForm ? 'Ver Promedios' : '+ Añadir Toma'}
-                  </button>
+                  {isAdmin ? (
+                    <button
+                      onClick={() => setShowBpForm(!showBpForm)}
+                      className="px-2 py-1 rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-850 text-xs font-semibold cursor-pointer hover:bg-emerald-100"
+                    >
+                      {showBpForm ? 'Ver Promedios' : '+ Añadir Toma'}
+                    </button>
+                  ) : (
+                    <span className="text-stone-400 font-bold text-[10px]">🔒 Solo Ericka</span>
+                  )}
                 </div>
 
                 {!showBpForm ? (
@@ -983,13 +1014,15 @@ export default function HealthPanel({
                             </div>
                           </div>
 
-                          <button
-                            onClick={() => onDeleteReading(read.id)}
-                            className="p-1 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                            title="Eliminar esta lectura"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => onDeleteReading(read.id)}
+                              className="p-1 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                              title="Eliminar esta lectura"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     );

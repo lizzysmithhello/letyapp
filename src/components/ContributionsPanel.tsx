@@ -14,6 +14,7 @@ interface ContributionsPanelProps {
   onDeleteContributor: (id: string) => void;
   totalPaidServices: number;
   monthlyBudgetGoal: number; // e.g. $19,800
+  isAdmin?: boolean;
 }
 
 export default function ContributionsPanel({
@@ -22,7 +23,8 @@ export default function ContributionsPanel({
   onUpdateContributor,
   onDeleteContributor,
   totalPaidServices,
-  monthlyBudgetGoal
+  monthlyBudgetGoal,
+  isAdmin = false
 }: ContributionsPanelProps) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -47,6 +49,7 @@ export default function ContributionsPanel({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     if (!name.trim() || !amount) return;
     onAddContributor(name.trim(), parseFloat(amount) || 1000);
     setName('');
@@ -55,6 +58,7 @@ export default function ContributionsPanel({
   };
 
   const handleToggleWeek = (id: string, week: 'w1' | 'w2' | 'w3' | 'w4', currentVal: boolean) => {
+    if (!isAdmin) return;
     onUpdateContributor(id, { [week]: !currentVal });
   };
 
@@ -86,13 +90,19 @@ export default function ContributionsPanel({
           <p className="text-stone-500 text-xs mt-0.5">Palomea las aportaciones de cada integrante por semana</p>
         </div>
         
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all hover:shadow-md cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          Nuevo Integrante
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all hover:shadow-md cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            Nuevo Integrante
+          </button>
+        ) : (
+          <div className="text-stone-500 bg-stone-50 border border-stone-200 text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1">
+            <span>🔒 Solo Ericka edita abonos</span>
+          </div>
+        )}
       </div>
 
       {/* Main Budget Progress Metrics */}
@@ -190,8 +200,8 @@ export default function ContributionsPanel({
                 <th className="py-2.5 px-2 text-center">Sem 3</th>
                 <th className="py-2.5 px-2 text-center">Sem 4</th>
                 <th className="py-2.5 px-2 text-right">Monto Semanal</th>
-                <th className="py-2.5 px-3 text-right">Aporte Mes</th>
-                <th className="py-2.5 px-3 text-center rounded-r-xl w-36">Acciones</th>
+                <th className={`py-2.5 px-3 text-right ${!isAdmin ? 'rounded-r-xl' : ''}`}>Aporte Mes</th>
+                {isAdmin && <th className="py-2.5 px-3 text-center rounded-r-xl w-36">Acciones</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-stone-800">
@@ -308,73 +318,75 @@ export default function ContributionsPanel({
                     </td>
 
                     {/* Actions Column */}
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {isEditing ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleSave(c.id)}
-                              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
-                              title="Guardar"
-                            >
-                              <Check className="w-3 h-3 stroke-[3]" />
-                              <span>Ok</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
-                              title="Cancelar"
-                            >
-                              ✕
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleStartEdit(c)}
-                              className="p-1 px-2 text-[10px] font-black tracking-wide bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-lg cursor-pointer transition flex items-center gap-1"
-                              title="Editar integrante"
-                            >
-                              ✏️ <span className="hidden md:inline">Editar</span>
-                            </button>
-                             {deleteConfirmId === c.id ? (
-                              <div className="flex items-center gap-1 md:gap-1.5 bg-rose-50 border border-rose-200/60 p-1 rounded-xl animate-fade-in shrink-0">
-                                <span className="text-[9px] font-bold text-rose-800 px-1">¿Quitar?</span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onDeleteContributor(c.id);
-                                    setDeleteConfirmId(null);
-                                  }}
-                                  className="px-2 py-0.5 text-[9px] font-black uppercase bg-rose-600 hover:bg-rose-700 text-white rounded-lg cursor-pointer transition-colors"
-                                >
-                                  Sí
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setDeleteConfirmId(null)}
-                                  className="px-2 py-0.5 text-[9px] font-black uppercase bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg cursor-pointer transition-colors"
-                                >
-                                  No
-                                </button>
-                              </div>
-                            ) : (
+                    {isAdmin && (
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {isEditing ? (
+                            <>
                               <button
                                 type="button"
-                                onClick={() => setDeleteConfirmId(c.id)}
-                                className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
-                                title="Eliminar integrante"
+                                onClick={() => handleSave(c.id)}
+                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                                title="Guardar"
                               >
-                                🗑️ <span className="hidden md:inline">Quitar</span>
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                <span>Ok</span>
                               </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
+                              <button
+                                type="button"
+                                onClick={() => setEditingId(null)}
+                                className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                                title="Cancelar"
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(c)}
+                                className="p-1 px-2 text-[10px] font-black tracking-wide bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-lg cursor-pointer transition flex items-center gap-1"
+                                title="Editar integrante"
+                              >
+                                ✏️ <span className="hidden md:inline">Editar</span>
+                              </button>
+                              {deleteConfirmId === c.id ? (
+                                <div className="flex items-center gap-1 md:gap-1.5 bg-rose-50 border border-rose-200/60 p-1 rounded-xl animate-fade-in shrink-0">
+                                  <span className="text-[9px] font-bold text-rose-800 px-1">¿Quitar?</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onDeleteContributor(c.id);
+                                      setDeleteConfirmId(null);
+                                    }}
+                                    className="px-2 py-0.5 text-[9px] font-black uppercase bg-rose-600 hover:bg-rose-700 text-white rounded-lg cursor-pointer transition-colors"
+                                  >
+                                    Sí
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    className="px-2 py-0.5 text-[9px] font-black uppercase bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg cursor-pointer transition-colors"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteConfirmId(c.id)}
+                                  className="p-1 px-2 text-[10px] font-black tracking-wide bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg cursor-pointer transition flex items-center gap-1"
+                                  title="Eliminar integrante"
+                                >
+                                  🗑️ <span className="hidden md:inline">Quitar</span>
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
