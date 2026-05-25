@@ -808,10 +808,43 @@ export default function App() {
     if (c.w4) weeksCount++;
     return c.weeklyAmount * weeksCount;
   };
+
+  const isWeeklyService = (name: string) => {
+    const norm = name?.toLowerCase() || '';
+    return norm.includes('velador') || norm.includes('limpieza');
+  };
+
   const totalContributed = contributors.reduce((sum, c) => sum + getContributorMonthTotal(c), 0);
-  const paidServicesSum = services.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+  
+  // Regular paid services (IsPaid and not Velador/Limpieza)
+  const regularPaidServicesSum = services
+    .filter(s => !isWeeklyService(s.name) && s.isPaid)
+    .reduce((sum, s) => sum + s.amount, 0);
+
+  // Weekly paid services (Velador/Limpieza, calculated by weeks checked)
+  const paidWeeklyServicesSum = services
+    .filter(s => isWeeklyService(s.name))
+    .reduce((sum, s) => {
+      let weeksChecked = 0;
+      if (s.w1) weeksChecked++;
+      if (s.w2) weeksChecked++;
+      if (s.w3) weeksChecked++;
+      if (s.w4) weeksChecked++;
+      return sum + (s.amount / 4) * weeksChecked;
+    }, 0);
+
+  // Despensa/Compras hechas con check
+  const paidShoppingSum = shoppingItems
+    .filter(item => item.isBought)
+    .reduce((sum, item) => sum + item.price, 0);
+
+  // Total amount paid for physical services list on dashboard
+  const paidServicesSum = regularPaidServicesSum + paidWeeklyServicesSum;
+  
   const unpaidServicesSum = services.filter(s => !s.isPaid).reduce((sum, s) => sum + s.amount, 0);
-  const familyCashBalance = totalContributed - paidServicesSum;
+
+  // Updated formula subtracting regular paid services, weekly paid services, and bought grocery items
+  const familyCashBalance = totalContributed - regularPaidServicesSum - paidWeeklyServicesSum - paidShoppingSum;
 
   // Compile active alerts to show in the "Panorama" tab
   interface SystemAlert {
@@ -1260,18 +1293,41 @@ export default function App() {
               {/* Financial Box Card */}
               <div 
                 onClick={() => setActiveTab('finances')}
-                className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-xs cursor-pointer hover:border-amber-250 transition-all group relative overflow-hidden"
+                className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-xs cursor-pointer hover:border-amber-250 transition-all group relative overflow-hidden flex flex-col justify-between"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Caja Disponible</span>
-                    <span className="block text-xl font-mono font-bold text-emerald-800 mt-1">${familyCashBalance.toLocaleString()} MXN</span>
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Caja Disponible</span>
+                      <span className="block text-xl font-mono font-bold text-emerald-800 mt-1">${familyCashBalance.toLocaleString()} MXN</span>
+                    </div>
+                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                      <DollarSign className="w-5 h-5" />
+                    </div>
                   </div>
-                  <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
-                    <DollarSign className="w-5 h-5" />
+                  
+                  {/* Detailed breakdown list requested by user */}
+                  <div className="mt-4 pt-3 border-t border-stone-100 space-y-1.5 text-[10px] font-sans text-stone-550">
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-1">➕ Facturado / Abonos:</span>
+                      <span className="font-mono font-bold text-stone-700">+${totalContributed.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-1">🛒 Despensa con check:</span>
+                      <span className="font-mono font-semibold text-rose-600">-${paidShoppingSum.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-1">💡 Servicios fijos con check:</span>
+                      <span className="font-mono font-semibold text-rose-700">-${regularPaidServicesSum.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex items-center gap-1">🛡️ Apoyo y Seguridad con check:</span>
+                      <span className="font-mono font-semibold text-rose-700">-${paidWeeklyServicesSum.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-xs text-stone-600 font-semibold group-hover:text-amber-800 transition-colors">
+
+                <div className="mt-4 flex items-center gap-1 text-xs text-stone-600 font-semibold group-hover:text-amber-800 transition-colors pt-2 border-t border-stone-50">
                   <span>Ver abonos y cobros</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 </div>
