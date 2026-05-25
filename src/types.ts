@@ -10,6 +10,10 @@ export interface ServicePayment {
   dueDate: string;
   isPaid: boolean;
   paymentDate?: string;
+  w1?: boolean;
+  w2?: boolean;
+  w3?: boolean;
+  w4?: boolean;
 }
 
 export interface WeeklyContributor {

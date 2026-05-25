@@ -11,14 +11,21 @@ interface ServicesPanelProps {
   services: ServicePayment[];
   onAddService: (name: string, amount: number, dueDate: string) => void;
   onToggleServicePaid: (id: string) => void;
+  onToggleServiceWeek?: (id: string, week: 1 | 2 | 3 | 4) => void;
   onDeleteService: (id: string) => void;
   isAdmin?: boolean;
 }
+
+const isWeeklyService = (name: string) => {
+  const norm = name?.toLowerCase() || '';
+  return norm.includes('velador') || norm.includes('limpieza');
+};
 
 export default function ServicesPanel({
   services,
   onAddService,
   onToggleServicePaid,
+  onToggleServiceWeek,
   onDeleteService,
   isAdmin = false
 }: ServicesPanelProps) {
@@ -246,6 +253,54 @@ export default function ServicesPanel({
                         <span>💬</span>
                         {status.message}
                       </p>
+
+                      {isWeeklyService(service.name) && (
+                        <div className="mt-3 pt-3 border-t border-stone-200/50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-1">
+                              📅 Pagos Semanales (1/4 total cada uno)
+                            </span>
+                            <span className="text-[9px] bg-rose-100 text-rose-900 font-extrabold px-1.5 py-0.5 rounded-full uppercase">
+                              Pagado: {
+                                [service.w1, service.w2, service.w3, service.w4].filter(Boolean).length
+                              } / 4
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[1, 2, 3, 4].map((wk) => {
+                              const isWkPaid = !!service[`w${wk}` as 'w1' | 'w2' | 'w3' | 'w4'];
+                              const wkAmount = service.amount / 4;
+                              return (
+                                <button
+                                  key={wk}
+                                  type="button"
+                                  onClick={() => isAdmin && onToggleServiceWeek?.(service.id, wk as 1 | 2 | 3 | 4)}
+                                  className={`p-1.5 rounded-xl border flex flex-col items-center justify-center transition-all ${
+                                    isAdmin ? 'cursor-pointer hover:scale-102 active:scale-98' : 'cursor-not-allowed opacity-75'
+                                  } ${
+                                    isWkPaid
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                                      : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                                  }`}
+                                  title={!isAdmin ? "Solo lectura (Solo Ericka edita)" : `Marcar pago de semana ${wk}`}
+                                >
+                                  <span className="text-[9px] font-bold text-stone-500 uppercase">Semana {wk}</span>
+                                  <span className="text-[11px] font-mono font-bold mt-0.5">${wkAmount.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</span>
+                                  <div className={`mt-1.5 w-3.5 h-3.5 rounded-md border flex items-center justify-center transition-all ${
+                                    isWkPaid ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-stone-400 bg-white'
+                                  }`}>
+                                    {isWkPaid && (
+                                      <svg className="w-2.5 h-2.5 stroke-[3.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

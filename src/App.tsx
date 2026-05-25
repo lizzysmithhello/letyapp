@@ -490,11 +490,45 @@ export default function App() {
     const todayStr = new Date().toISOString().split('T')[0];
     setServices(prev => prev.map(s => {
       if (s.id === id) {
-        return {
+        const nextPaid = !s.isPaid;
+        const normName = s.name ? s.name.toLowerCase() : '';
+        const isWeekly = normName.includes('velador') || normName.includes('limpieza');
+        
+        const updated = {
           ...s,
-          isPaid: !s.isPaid,
-          paymentDate: !s.isPaid ? todayStr : undefined
+          isPaid: nextPaid,
+          paymentDate: nextPaid ? todayStr : undefined
         };
+
+        if (isWeekly) {
+          updated.w1 = nextPaid;
+          updated.w2 = nextPaid;
+          updated.w3 = nextPaid;
+          updated.w4 = nextPaid;
+        }
+
+        return updated;
+      }
+      return s;
+    }));
+  };
+
+  const handleToggleServiceWeek = (id: string, week: 1 | 2 | 3 | 4) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    setServices(prev => prev.map(s => {
+      if (s.id === id) {
+        const key = `w${week}` as 'w1' | 'w2' | 'w3' | 'w4';
+        const updated = {
+          ...s,
+          [key]: !s[key]
+        };
+        
+        // Check if all 4 weeks are now checked
+        const allChecked = !!(updated.w1 && updated.w2 && updated.w3 && updated.w4);
+        updated.isPaid = allChecked;
+        updated.paymentDate = allChecked ? todayStr : undefined;
+        
+        return updated;
       }
       return s;
     }));
@@ -1549,6 +1583,7 @@ export default function App() {
                   services={services.filter(s => s.name?.toLowerCase() !== 'renta mensual' && s.name?.toLowerCase() !== 'renta')}
                   onAddService={handleAddService}
                   onToggleServicePaid={handleToggleServicePaid}
+                  onToggleServiceWeek={handleToggleServiceWeek}
                   onDeleteService={handleDeleteService}
                   isAdmin={isAdmin}
                 />
