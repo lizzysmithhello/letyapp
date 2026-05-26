@@ -18,7 +18,9 @@ import {
   RefreshCw, 
   ExternalLink,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { FamilyBirthday } from '../types';
 
@@ -105,6 +107,19 @@ export default function UserProfileAndSettings({
 
   // User authorization constraint check
   const canEdit = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
+
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = () => {
+    try {
+      const currentUrl = window.location.href;
+      navigator.clipboard.writeText(currentUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 3000);
+    } catch (err) {
+      console.error('Error al copiar el enlace:', err);
+    }
+  };
 
   const handleCreatePhrase = (e: React.FormEvent) => {
     e.preventDefault();
@@ -315,6 +330,77 @@ export default function UserProfileAndSettings({
                   <span className="text-[10px] text-stone-400 font-mono mt-3 italic">
                     Seguridad familiar de Lety App v3
                   </span>
+                </div>
+              </div>
+            </div>
+
+            {/* INVITACIÓN Y COMPARTIR CON LA FAMILIA */}
+            <div className="bg-gradient-to-br from-pink-50/50 via-purple-50/10 to-white border border-pink-205 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center gap-3 border-b border-pink-100 pb-3 flex-wrap justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-pink-100/80 text-pink-700 font-bold">
+                    <Share2 className="w-5 h-5 text-pink-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-black text-pink-950 text-base">
+                      🔗 Invitar & Compartir con la Familia
+                    </h4>
+                    <p className="text-[10px] text-stone-500 mt-0.5">Permite que tus hermanos, tíos o familiares sigan los gastos y compras en tiempo real</p>
+                  </div>
+                </div>
+                
+                {copiedLink ? (
+                  <span className="px-2.5 py-1 text-[9px] font-black uppercase text-pink-800 bg-pink-100 border border-pink-200 rounded-md animate-bounce">
+                    ¡Enlace Copiado!
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                {/* Visual steps */}
+                <div className="md:col-span-7 space-y-3.5">
+                  <p className="text-stone-600 text-xs leading-relaxed font-sans">
+                    Lety App v3 incluye sincronización en la nube familiar automática. Puedes enviar el enlace a tu familia para que ingresen. Ellos podrán <strong>ver todo en tiempo real</strong> (Compras de despensa, Presupuesto familiar, Aportaciones, Salud y cuidado de la abuelita) de forma segura en formato de <strong>Solo Lectura</strong>, sin interrumpir tu administración.
+                  </p>
+
+                  <div className="space-y-2.5">
+                    <span className="text-[10px] font-black uppercase text-stone-400 tracking-wider">¿Cómo se une mi familia?</span>
+                    <ul className="space-y-2.5 text-[11px] text-stone-600">
+                      <li className="flex items-start gap-2.5">
+                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                        <span>Envía el enlace público a tu familia (puedes copiarlo usando el botón de la derecha).</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                        <span>Tus familiares abren el enlace en su celular o computadora, se registran con su correo propio, o inician sesión directo usando la opción rápida de <strong>Google Gmail</strong>.</span>
+                      </li>
+                      <li className="flex items-start gap-2.5">
+                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">3</span>
+                        <span>¡Listo! Al estar conectados, verán exactamente la misma base de datos sincronizada en vivo que tú administras.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Interactive Copy Card */}
+                <div className="md:col-span-5 bg-white border border-pink-100 p-4 rounded-xl flex flex-col justify-between h-full gap-4 shadow-2xs">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-pink-600 block mb-1">Enlace para Compartir</span>
+                    <p className="text-[10px] text-stone-500 leading-normal mb-3">Toca el botón para copiar el enlace directo de acceso familiar y compártelo por WhatsApp o mensaje.</p>
+                    
+                    <div className="p-2.5 bg-stone-50 border border-stone-200 rounded-lg text-[10px] font-mono text-stone-600 break-all select-all font-semibold">
+                      {typeof window !== 'undefined' ? window.location.origin : 'https://lety-app.com'}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="w-full py-2.5 bg-gradient-to-r from-pink-505 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition active:scale-98"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedLink ? '¡Enlace Copiado!' : 'Copiar Enlace Familiar'}</span>
+                  </button>
                 </div>
               </div>
             </div>

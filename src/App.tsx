@@ -26,7 +26,10 @@ import {
   LogOut,
   ChefHat,
   Calendar,
-  Archive
+  Archive,
+  Cloud,
+  CloudOff,
+  RefreshCw
 } from 'lucide-react';
 
 import { 
@@ -80,6 +83,13 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [activeProfileSubTab, setActiveProfileSubTab] = useState<'perfil' | 'frases' | 'cumpleanos'>('perfil');
+
+  // --- CLOUD SYNCHRONIZATION HOOKS & STATUS ---
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'idle' | 'loading' | 'saving' | 'success' | 'error'>('idle');
+  const [cloudSyncError, setCloudSyncError] = useState<string>('');
+  const [lastCloudUpdate, setLastCloudUpdate] = useState<string>('');
+  const isInitialFetchRef = React.useRef(true);
+  const isSavingRef = React.useRef(false);
 
   // --- AUTHENTICATION STATE ---
   const [currentUser, setCurrentUser] = useState<{ email: string; name: string; avatarUrl: string; provider: 'email' | 'google' } | null>(() => {
@@ -260,6 +270,157 @@ export default function App() {
     detectedNewMonth: '',
     previousMonthLabel: ''
   });
+
+  // --- CLOUD SYNCHRONIZATION IMPLEMENTATION ---
+  const loadSharedStateFromServer = async () => {
+    try {
+      setCloudSyncStatus('loading');
+      setCloudSyncError('');
+      const res = await fetch('/api/shared-state');
+      const data = await res.json();
+      
+      if (data.success && data.state) {
+        const s = data.state;
+        isInitialFetchRef.current = true;
+        
+        if (s.grandmaName !== undefined) setGrandmaName(s.grandmaName);
+        if (s.monthlyIncome !== undefined) setMonthlyIncome(s.monthlyIncome);
+        if (s.foodBudget !== undefined) setFoodBudget(s.foodBudget);
+        if (s.basicsBudget !== undefined) setBasicsBudget(s.basicsBudget);
+        if (s.savingsAlloc !== undefined) setSavingsAlloc(s.savingsAlloc);
+        if (s.transportBudget !== undefined) setTransportBudget(s.transportBudget);
+        if (s.rentAverage !== undefined) setRentAverage(s.rentAverage);
+        if (s.izziAverage !== undefined) setIzziAverage(s.izziAverage);
+        if (s.luzAverage !== undefined) setLuzAverage(s.luzAverage);
+        if (s.aguaAverage !== undefined) setAguaAverage(s.aguaAverage);
+        if (s.gasAverage !== undefined) setGasAverage(s.gasAverage);
+        if (s.veladorDia !== undefined) setVeladorDia(s.veladorDia);
+        if (s.veladorNoche !== undefined) setVeladorNoche(s.veladorNoche);
+        if (s.limpieza !== undefined) setLimpieza(s.limpieza);
+        if (s.services !== undefined) setServices(s.services);
+        if (s.contributors !== undefined) setContributors(s.contributors);
+        if (s.shoppingItems !== undefined) setShoppingItems(s.shoppingItems);
+        if (s.momAdvices !== undefined) setMomAdvices(s.momAdvices);
+        if (s.storeRecommendations !== undefined) setStoreRecommendations(s.storeRecommendations);
+        if (s.medicines !== undefined) setMedicines(s.medicines);
+        if (s.bloodPressureReadings !== undefined) setBloodPressureReadings(s.bloodPressureReadings);
+        if (s.savings !== undefined) setSavings(s.savings);
+        if (s.birthdays !== undefined) setBirthdays(s.birthdays);
+        if (s.contacts !== undefined) setContacts(s.contacts);
+        if (s.isssteAppointments !== undefined) setIsssteAppointments(s.isssteAppointments);
+        if (s.glassCount !== undefined) setGlassCount(s.glassCount);
+        if (s.rentStates !== undefined) setRentStates(s.rentStates);
+        if (s.weeklySurpluses !== undefined) setWeeklySurpluses(s.weeklySurpluses);
+        if (s.monthlyArchives !== undefined) setMonthlyArchives(s.monthlyArchives);
+        
+        setCloudSyncStatus('success');
+        setLastCloudUpdate(new Date().toLocaleTimeString());
+        
+        setTimeout(() => {
+          isInitialFetchRef.current = false;
+        }, 500);
+      } else {
+        setCloudSyncStatus('idle');
+        isInitialFetchRef.current = false;
+      }
+    } catch (err: any) {
+      console.error('Error fetching shared state:', err);
+      setCloudSyncStatus('error');
+      setCloudSyncError(err.message || 'Error de conexión');
+      isInitialFetchRef.current = false;
+    }
+  };
+
+  const uploadSharedStateToServer = async (force: boolean = false) => {
+    if (!currentUser || (!force && (!isAdmin || isInitialFetchRef.current || isSavingRef.current))) return;
+    
+    try {
+      isSavingRef.current = true;
+      setCloudSyncStatus('saving');
+      setCloudSyncError('');
+      
+      const payload = {
+        grandmaName,
+        monthlyIncome,
+        foodBudget,
+        basicsBudget,
+        savingsAlloc,
+        transportBudget,
+        rentAverage,
+        izziAverage,
+        luzAverage,
+        aguaAverage,
+        gasAverage,
+        veladorDia,
+        veladorNoche,
+        limpieza,
+        services,
+        contributors,
+        shoppingItems,
+        momAdvices,
+        storeRecommendations,
+        medicines,
+        bloodPressureReadings,
+        savings,
+        birthdays,
+        contacts,
+        isssteAppointments,
+        glassCount,
+        rentStates,
+        weeklySurpluses,
+        monthlyArchives
+      };
+      
+      const res = await fetch('/api/shared-state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: currentUser.email,
+          name: currentUser.name,
+          state: payload
+        })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setCloudSyncStatus('success');
+        setLastCloudUpdate(new Date().toLocaleTimeString());
+      } else {
+        setCloudSyncStatus('error');
+        setCloudSyncError(data.msg || 'Error al guardar');
+      }
+    } catch (err: any) {
+      console.error('Error saving:', err);
+      setCloudSyncStatus('error');
+      setCloudSyncError(err.message || 'Error de conexión');
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
+
+  // Trigger sync load once whenever currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      loadSharedStateFromServer();
+    }
+  }, [currentUser]);
+
+  // Autosave triggers for admins when changing state variables
+  useEffect(() => {
+    if (isInitialFetchRef.current) return;
+    const timer = setTimeout(() => {
+      uploadSharedStateToServer();
+    }, 1200); // 1.2 second debounce
+    return () => clearTimeout(timer);
+  }, [
+    grandmaName, monthlyIncome, foodBudget, basicsBudget, savingsAlloc, transportBudget,
+    rentAverage, izziAverage, luzAverage, aguaAverage, gasAverage, veladorDia, veladorNoche, limpieza,
+    services, contributors, shoppingItems, momAdvices, storeRecommendations, medicines,
+    bloodPressureReadings, savings, birthdays, contacts, isssteAppointments, glassCount,
+    rentStates, weeklySurpluses, monthlyArchives
+  ]);
 
   // ---------------------------------------------------------------------------
   // SYNCHRONIZATION WITH LOCALSTORAGE
@@ -1074,6 +1235,68 @@ export default function App() {
 
           {/* Quick family info details */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Cloud synchronization state widget */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-stone-800/60 border border-stone-700 text-stone-300">
+              {cloudSyncStatus === 'loading' && (
+                <span className="flex items-center gap-1 text-[9px] font-bold text-amber-400">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  <span>Cargando...</span>
+                </span>
+              )}
+              {cloudSyncStatus === 'saving' && (
+                <span className="flex items-center gap-1 text-[9px] font-bold text-pink-400 animate-pulse">
+                  <Cloud className="w-3 h-3" />
+                  <span>Guardando...</span>
+                </span>
+              )}
+              {cloudSyncStatus === 'success' && (
+                <span 
+                  className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 cursor-help"
+                  title={`Actualizado última vez: ${lastCloudUpdate}. Todo sincronizado con la nube familiar.`}
+                >
+                  <Cloud className="w-3 h-3 text-emerald-450" />
+                  <span>Nube {lastCloudUpdate && `(${lastCloudUpdate})`}</span>
+                </span>
+              )}
+              {cloudSyncStatus === 'error' && (
+                <span 
+                  className="flex items-center gap-1 text-[9px] font-bold text-rose-450 cursor-help"
+                  title={cloudSyncError || "Error de conexión o permisos de escritura"}
+                >
+                  <CloudOff className="w-3 h-3 text-rose-500" />
+                  <span>Nube Desconectada</span>
+                </span>
+              )}
+              {cloudSyncStatus === 'idle' && (
+                <span className="flex items-center gap-1 text-[9px] font-bold text-stone-400">
+                  <Cloud className="w-3 h-3" />
+                  <span>Nube Local</span>
+                </span>
+              )}
+
+              {/* Refresh Button triggers manual reloading (useful for guests too!) */}
+              <button
+                type="button"
+                onClick={() => loadSharedStateFromServer()}
+                title="Actualizar datos desde la nube familiar"
+                className="p-1 rounded-lg hover:bg-stone-700/80 hover:text-white transition active:scale-95 cursor-pointer"
+              >
+                <RefreshCw className={`w-2.5 h-2.5 ${cloudSyncStatus === 'loading' ? 'animate-spin' : ''}`} />
+              </button>
+
+              {/* Trigger manual save for Ericka */}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => uploadSharedStateToServer(true)}
+                  title="Empujar cambios inmediatamente por si acaso"
+                  className="px-1 text-[8px] uppercase font-black tracking-wider bg-rose-600/30 hover:bg-rose-600 hover:text-white border border-rose-500/30 rounded-md transition text-rose-300 cursor-pointer"
+                >
+                  Subir
+                </button>
+              )}
+            </div>
+
             <span className="text-[10px] font-mono font-bold text-stone-300 bg-stone-800/80 px-2.5 py-1.5 rounded-lg border border-stone-700/50">
               Caja: <strong className="text-emerald-400 font-extrabold">${familyCashBalance.toLocaleString()} MXN</strong>
             </span>
