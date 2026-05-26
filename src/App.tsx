@@ -438,7 +438,7 @@ export default function App() {
   }, [monthlyArchives]);
 
   useEffect(() => {
-    localStorage.setItem('lety_services', JSON.stringify(services));
+    localStorage.setItem('lety_services_v2', JSON.stringify(services));
   }, [services]);
 
   useEffect(() => {
