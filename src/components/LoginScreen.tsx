@@ -37,7 +37,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   // ---------------------------------------------------------
   // EMAIL / PASSWORD LOGIN & REGISTRATION
   // ---------------------------------------------------------
-  const handleEmailAction = (e: React.FormEvent) => {
+  const handleEmailAction = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
@@ -63,58 +63,137 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         return;
       }
 
-      // Check if user already exists
-      const userExists = users.some((u: any) => u.email === trimmedEmail);
-      if (userExists) {
-        setErrorMsg('Este correo ya está registrado. Intenta iniciar sesión.');
-        return;
-      }
-
-      // Register new user
-      const newUser = {
-        email: trimmedEmail,
-        password, // stored locally for simple mock demo purposes
-        name: trimmedName,
-        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(trimmedName)}`,
-        provider: 'email' as const
-      };
-
-      saveRegisteredUsers([...users, newUser]);
-      setSuccessMsg('¡Usuario registrado con éxito! Iniciando sesión...');
-      
-      setTimeout(() => {
-        onLoginSuccess({
-          email: newUser.email,
-          name: newUser.name,
-          avatarUrl: newUser.avatarUrl,
-          provider: 'email'
+      try {
+        const res = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedEmail,
+            name: trimmedName,
+            avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(trimmedName)}`,
+            provider: 'email',
+            password
+          })
         });
-      }, 1500);
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          setErrorMsg(data.msg || 'Error al registrar en el servidor.');
+          return;
+        }
+
+        // Save locally to support offline fallback redundantly
+        if (!users.some((u: any) => u.email === trimmedEmail)) {
+          saveRegisteredUsers([...users, data.user]);
+        }
+
+        setSuccessMsg('¡Usuario registrado con éxito! Iniciando sesión...');
+        
+        setTimeout(() => {
+          onLoginSuccess({
+            email: data.user.email,
+            name: data.user.name,
+            avatarUrl: data.user.avatarUrl,
+            provider: 'email'
+          });
+        }, 1200);
+      } catch (err: any) {
+        console.error('Error registering:', err);
+        setErrorMsg('Error de conexión con el servidor. Inténtalo más tarde.');
+      }
 
     } else {
-      // Find user
-      const user = users.find((u: any) => u.email === trimmedEmail);
-      
-      if (!user) {
-        setErrorMsg('El correo no se encuentra registrado. Regístrate primero.');
-        return;
-      }
-
-      if (user.password !== password) {
-        setErrorMsg('Contraseña incorrecta. Inténtalo de nuevo.');
-        return;
-      }
-
-      setSuccessMsg('¡Inicio de sesión exitoso! Bienvenido.');
-      
-      setTimeout(() => {
-        onLoginSuccess({
-          email: user.email,
-          name: user.name,
-          avatarUrl: user.avatarUrl,
-          provider: 'email'
+      // Find or register credentials with server to ensure multi-device synchronization
+      try {
+        const res = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: trimmedEmail,
+            password,
+            provider: 'email'
+          })
         });
-      }, 1200);
+        const data = await res.json();
+        
+        if (res.status === 401) {
+          setErrorMsg('Contraseña incorrecta. Inténtalo de nuevo.');
+          return;
+        }
+
+        if (res.ok && data.success) {
+          // Sync locally
+          const updatedLocal = users.filter((u: any) => u.email !== trimmedEmail);
+          saveRegisteredUsers([...updatedLocal, data.user]);
+
+          setSuccessMsg('¡Inicio de sesión exitoso! Bienvenido.');
+          
+          setTimeout(() => {
+            onLoginSuccess({
+              email: data.user.email,
+              name: data.user.name,
+              avatarUrl: data.user.avatarUrl,
+              provider: 'email'
+            });
+          }, 1200);
+          return;
+        }
+
+        // Fallback local lookup if server is not recognizing (not registered on server yet)
+        const user = users.find((u: any) => u.email === trimmedEmail);
+        if (!user) {
+          setErrorMsg('El correo no se encuentra registrado en la nube ni localmente. Regístrate primero.');
+          return;
+        }
+
+        if (user.password !== password) {
+          setErrorMsg('Contraseña incorrecta. Inténtalo de nuevo.');
+          return;
+        }
+
+        // Try syncing local account to the server now
+        try {
+          await fetch('/api/users/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...user,
+              provider: 'email'
+            })
+          });
+        } catch (syncErr) {
+          console.warn('Silent sync to server failed:', syncErr);
+        }
+
+        setSuccessMsg('¡Inicio de sesión exitoso! Bienvenido (Modo Sincronizado).');
+        
+        setTimeout(() => {
+          onLoginSuccess({
+            email: user.email,
+            name: user.name,
+            avatarUrl: user.avatarUrl,
+            provider: 'email'
+          });
+        }, 1200);
+
+      } catch (err: any) {
+        console.error('Error logging in:', err);
+        // True offline mode login
+        const user = users.find((u: any) => u.email === trimmedEmail);
+        if (user && user.password === password) {
+          setSuccessMsg('¡Inicio de sesión exitoso (Modo Local Offline)!');
+          setTimeout(() => {
+            onLoginSuccess({
+              email: user.email,
+              name: user.name,
+              avatarUrl: user.avatarUrl,
+              provider: 'email'
+            });
+          }, 1200);
+        } else {
+          setErrorMsg('Contraseña o correo incorrectos y el servidor no responde.');
+        }
+      }
     }
   };
 
@@ -128,7 +207,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setErrorMsg('');
   };
 
-  const handleGoogleMockSubmit = (e: React.FormEvent) => {
+  const handleGoogleMockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const gEmail = googleEmailInput.trim().toLowerCase();
     const gName = googleNameInput.trim();
@@ -145,6 +224,23 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(finalName)}`,
       provider: 'google' as const
     };
+
+    try {
+      // Store on server too to be visible in admin options
+      await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(googleUser)
+      });
+    } catch (err) {
+      console.warn('Could not register Google user on server:', err);
+    }
+
+    // Save locally
+    const users = getRegisteredUsers();
+    if (!users.some((u: any) => u.email === gEmail)) {
+      saveRegisteredUsers([...users, googleUser]);
+    }
 
     setIsGoogleOverlayOpen(false);
     onLoginSuccess(googleUser);

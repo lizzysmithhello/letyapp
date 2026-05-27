@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   MessageSquare, 
@@ -61,6 +61,8 @@ interface UserProfileAndSettingsProps {
   shoppingItems: any[];
   savingsAlloc: number;
   setSavingsAlloc: (val: number) => void;
+  invitedEmails: string[];
+  setInvitedEmails: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export default function UserProfileAndSettings({
@@ -86,7 +88,9 @@ export default function UserProfileAndSettings({
   limpieza,
   shoppingItems,
   savingsAlloc,
-  setSavingsAlloc
+  setSavingsAlloc,
+  invitedEmails,
+  setInvitedEmails
 }: UserProfileAndSettingsProps) {
   const [activeSubTab, setActiveSubTab] = useState<'perfil' | 'frases' | 'cumpleanos'>(initialSection);
   const [newPhraseInput, setNewPhraseInput] = useState('');
@@ -103,12 +107,38 @@ export default function UserProfileAndSettings({
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncStatusText, setSyncStatusText] = useState('');
+
+  // Server-side registered family list
+  const [registeredUsers, setRegisteredUsers] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [manualEmailInput, setManualEmailInput] = useState('');
   const [lastSyncDate, setLastSyncDate] = useState<string | null>(null);
 
   // User authorization constraint check
   const canEdit = currentUser?.email?.toLowerCase().trim() === 'inglizvera@gmail.com' || currentUser?.name?.toLowerCase().trim().includes('ericka') || currentUser?.name?.toLowerCase().trim().includes('erika');
 
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const fetchRegisteredUsersState = async () => {
+    try {
+      setIsLoadingUsers(true);
+      const res = await fetch('/api/registered-users');
+      const data = await res.json();
+      if (data.success && data.users) {
+        setRegisteredUsers(data.users);
+      }
+    } catch (e) {
+      console.error('Error fetching registered users:', e);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (canEdit) {
+      fetchRegisteredUsersState();
+    }
+  }, [canEdit]);
 
   const handleCopyLink = () => {
     try {
@@ -335,7 +365,7 @@ export default function UserProfileAndSettings({
             </div>
 
             {/* INVITACIÓN Y COMPARTIR CON LA FAMILIA */}
-            <div className="bg-gradient-to-br from-pink-50/50 via-purple-50/10 to-white border border-pink-205 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="bg-gradient-to-br from-pink-50/50 via-purple-50/10 to-white border border-pink-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center gap-3 border-b border-pink-100 pb-3 flex-wrap justify-between">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-lg bg-pink-100/80 text-pink-700 font-bold">
@@ -356,39 +386,41 @@ export default function UserProfileAndSettings({
                 ) : null}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
                 {/* Visual steps */}
-                <div className="md:col-span-7 space-y-3.5">
-                  <p className="text-stone-600 text-xs leading-relaxed font-sans">
-                    Lety App v3 incluye sincronización en la nube familiar automática. Puedes enviar el enlace a tu familia para que ingresen. Ellos podrán <strong>ver todo en tiempo real</strong> (Compras de despensa, Presupuesto familiar, Aportaciones, Salud y cuidado de la abuelita) de forma segura en formato de <strong>Solo Lectura</strong>, sin interrumpir tu administración.
-                  </p>
+                <div className="lg:col-span-7 space-y-3.5 flex flex-col justify-between">
+                  <div>
+                    <p className="text-stone-600 text-xs leading-relaxed font-sans">
+                      Lety App v3 incluye sincronización en la nube familiar automática. Puedes enviar el enlace a tu familia para que ingresen. Ellos podrán <strong>ver todo en tiempo real</strong> (Compras de despensa, Presupuesto familiar, Aportaciones, Salud y cuidado de la abuelita) de forma segura en formato de <strong>Solo Lectura</strong>, sin interrumpir tu administración.
+                    </p>
 
-                  <div className="space-y-2.5">
-                    <span className="text-[10px] font-black uppercase text-stone-400 tracking-wider">¿Cómo se une mi familia?</span>
-                    <ul className="space-y-2.5 text-[11px] text-stone-600">
-                      <li className="flex items-start gap-2.5">
-                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">1</span>
-                        <span>Envía el enlace público a tu familia (puedes copiarlo usando el botón de la derecha).</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">2</span>
-                        <span>Tus familiares abren el enlace en su celular o computadora, se registran con su correo propio, o inician sesión directo usando la opción rápida de <strong>Google Gmail</strong>.</span>
-                      </li>
-                      <li className="flex items-start gap-2.5">
-                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">3</span>
-                        <span>¡Listo! Al estar conectados, verán exactamente la misma base de datos sincronizada en vivo que tú administras.</span>
-                      </li>
-                    </ul>
+                    <div className="space-y-2.5 mt-4">
+                      <span className="text-[10px] font-black uppercase text-stone-400 tracking-wider">¿Cómo se une mi familia?</span>
+                      <ul className="space-y-2.5 text-[11px] text-stone-600">
+                        <li className="flex items-start gap-2.5">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                          <span>Envía el enlace público a tu familia (puedes copiarlo usando el botón de la derecha).</span>
+                        </li>
+                        <li className="flex items-start gap-2.5">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                          <span>Tus familiares abren el enlace en su celular o computadora, se registran con su correo propio, o se unen rápido con <strong>Google Gmail</strong>.</span>
+                        </li>
+                        <li className="flex items-start gap-2.5">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-pink-100 text-pink-850 text-[10px] font-bold shrink-0 mt-0.5">3</span>
+                          <span><strong>Autorízales el correo abajo:</strong> Una vez dados de alta, aparecerán en la lista de abajo de esta pestaña de Ajustes y podrás darles acceso con un clic.</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
                 {/* Interactive Copy Card */}
-                <div className="md:col-span-5 bg-white border border-pink-100 p-4 rounded-xl flex flex-col justify-between h-full gap-4 shadow-2xs">
+                <div className="lg:col-span-5 bg-white border border-pink-100 p-4 rounded-xl flex flex-col justify-between gap-4 shadow-3xs">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-wider text-pink-600 block mb-1">Enlace para Compartir</span>
                     <p className="text-[10px] text-stone-500 leading-normal mb-3">Toca el botón para copiar el enlace directo de acceso familiar y compártelo por WhatsApp o mensaje.</p>
                     
-                    <div className="p-2.5 bg-stone-50 border border-stone-200 rounded-lg text-[10px] font-mono text-stone-600 break-all select-all font-semibold">
+                    <div className="p-2.5 bg-stone-50 border border-stone-200 rounded-lg text-[10px] font-mono text-stone-600 break-all select-all font-semibold select-none">
                       {typeof window !== 'undefined' ? window.location.origin : 'https://lety-app.com'}
                     </div>
                   </div>
@@ -396,13 +428,161 @@ export default function UserProfileAndSettings({
                   <button
                     type="button"
                     onClick={handleCopyLink}
-                    className="w-full py-2.5 bg-gradient-to-r from-pink-505 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition active:scale-98"
+                    className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition active:scale-98"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>{copiedLink ? '¡Enlace Copiado!' : 'Copiar Enlace Familiar'}</span>
                   </button>
                 </div>
               </div>
+
+              {/* WHITELIST MANAGER - ACCESSIBLE ONLY BY ERICKA / ACCOUNT ADMIN */}
+              {canEdit && (
+                <div className="mt-6 border-t border-stone-150 pt-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h5 className="text-xs font-black uppercase tracking-wider text-stone-850 flex items-center gap-1.5">
+                        <span>👥</span> Miembros Familiares con Acceso Autorizado (Invitados)
+                      </h5>
+                      <p className="text-[10px] text-stone-500 font-medium">Gestiona qué personas de la familia pueden ver tu panel sincronizado</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={fetchRegisteredUsersState}
+                      disabled={isLoadingUsers}
+                      className="self-start sm:self-center px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-250 text-stone-700 text-[10px] font-bold rounded-xl flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isLoadingUsers ? 'animate-spin' : ''}`} />
+                      <span>Actualizar Lista de Registro</span>
+                    </button>
+                  </div>
+
+                  {/* Form to manuals add */}
+                  <div className="bg-stone-50/50 p-4 border border-stone-200/80 rounded-2xl">
+                    <div className="flex items-end gap-2.5 flex-wrap sm:flex-nowrap">
+                      <div className="w-full">
+                        <label className="block text-[9px] font-black uppercase text-stone-500 mb-1 tracking-wider">Añadir Correo Manualmente</label>
+                        <input
+                          type="email"
+                          value={manualEmailInput}
+                          onChange={(e) => setManualEmailInput(e.target.value)}
+                          placeholder="Ej. maria-rodriguez@gmail.com"
+                          className="w-full text-xs border border-stone-200 rounded-lg px-3 py-1.5 bg-white font-medium focus:ring-1 focus:ring-pink-500"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const email = manualEmailInput.trim().toLowerCase();
+                          if (!email) return;
+                          if (invitedEmails.includes(email)) {
+                            alert('Este correo ya está en la lista de invitados.');
+                            return;
+                          }
+                          setInvitedEmails([...invitedEmails, email]);
+                          setManualEmailInput('');
+                        }}
+                        className="px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-lg text-xs hover:shadow-xs transition shrink-0 cursor-pointer h-[34px] flex items-center justify-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Agregar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Whitelisted emails grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Block 1: Real-time registered users on SERVER */}
+                    <div className="p-4 bg-white border border-stone-205 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <h6 className="text-[10px] font-extrabold uppercase tracking-wider text-rose-800 pb-2 border-b border-stone-100 flex justify-between items-center">
+                          <span>📱 Personas Registradas en la App</span>
+                          <span className="text-[9px] font-mono text-stone-400">({registeredUsers.length} totales)</span>
+                        </h6>
+                        
+                        {registeredUsers.length === 0 ? (
+                          <p className="text-[10px] italic text-stone-400 py-6 text-center leading-relaxed">
+                            Ningún familiar se ha registrado aún por separado en este servidor. Compárteles el enlace de arriba para que se den de alta en sus celulares.
+                          </p>
+                        ) : (
+                          <div className="space-y-2 mt-2.5 max-h-[180px] overflow-y-auto pr-1">
+                            {registeredUsers.map((userObj: any) => {
+                              const isUserInvited = invitedEmails.map(e => e.toLowerCase().trim()).includes(userObj.email.toLowerCase().trim());
+                              return (
+                                <div key={userObj.email} className="flex justify-between items-center p-2 bg-stone-50 border border-stone-150 rounded-xl hover:border-stone-200 transition-all text-stone-800 text-xs">
+                                  <div className="flex items-center gap-2 overflow-hidden pr-2">
+                                    <img src={userObj.avatarUrl} alt={userObj.name} className="w-7 h-7 rounded-full bg-stone-100 border border-stone-200 shrink-0 select-none referrerPolicy='no-referrer'" referrerPolicy="no-referrer" />
+                                    <div className="overflow-hidden">
+                                      <p className="font-bold text-[11px] truncate">{userObj.name}</p>
+                                      <p className="text-[9px] font-mono font-medium text-stone-400 truncate">{userObj.email}</p>
+                                    </div>
+                                  </div>
+                                  
+                                  {isUserInvited ? (
+                                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 font-bold text-[9px] border border-emerald-100 rounded-full flex items-center gap-1 shrink-0">
+                                      <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                      Invitado
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const email = userObj.email.toLowerCase().trim();
+                                        setInvitedEmails([...invitedEmails, email]);
+                                      }}
+                                      className="px-2.5 py-1 bg-pink-600 hover:bg-pink-700 active:bg-pink-800 text-white font-bold text-[9px] rounded-lg cursor-pointer transition shrink-0 shadow-3xs"
+                                    >
+                                      + Invitar
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Block 2: Whitelisted Emails List with Quick Remove */}
+                    <div className="p-4 bg-white border border-stone-205 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <h6 className="text-[10px] font-extrabold uppercase tracking-wider text-pink-900 pb-2 border-b border-stone-100 flex justify-between items-center">
+                          <span>🔓 Invitados Autorizados (Ver Panel)</span>
+                          <span className="text-[9px] font-mono text-stone-400">({invitedEmails.length} autorizados)</span>
+                        </h6>
+
+                        {invitedEmails.length === 0 ? (
+                          <div className="text-center py-6 text-[10px] text-stone-400 bg-stone-50/50 rounded-xl border border-dashed border-stone-150 leading-relaxed mt-2">
+                            Ningún correo ha sido invitado aún. Añada correos arriba para autorizar el acceso familiar.
+                          </div>
+                        ) : (
+                          <div className="space-y-2 mt-2.5 max-h-[180px] overflow-y-auto pr-1">
+                            {invitedEmails.map((emailString) => (
+                              <div key={emailString} className="flex justify-between items-center p-2 px-2.5 bg-pink-50/20 border border-pink-100/50 rounded-xl text-xs">
+                                <div className="overflow-hidden pr-2">
+                                  <p className="font-mono font-bold text-[10px] text-stone-850 truncate select-all">{emailString}</p>
+                                  <span className="text-[8px] font-bold text-pink-600 tracking-wider uppercase">Acceso: Solo-Lectura</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const remains = invitedEmails.filter(e => e.toLowerCase().trim() !== emailString.toLowerCase().trim());
+                                    setInvitedEmails(remains);
+                                  }}
+                                  className="p-1 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition shrink-0"
+                                  title="Revocar invitación"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* EXCLUSIVE SECTION FOR ERICKA: LIVE GUARDADITO & MARGEN LIBRE PREDICTIVO */}

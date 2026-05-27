@@ -29,7 +29,11 @@ import {
   Archive,
   Cloud,
   CloudOff,
-  RefreshCw
+  RefreshCw,
+  Lock,
+  ShieldAlert,
+  Copy,
+  Check
 } from 'lucide-react';
 
 import { 
@@ -259,6 +263,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [invitedEmails, setInvitedEmails] = useState<string[]>(() => {
+    const saved = localStorage.getItem('lety_invited_emails');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [useDemoMode, setUseDemoMode] = useState(false);
+
   interface RolloverAlert {
     show: boolean;
     detectedNewMonth: string;
@@ -312,6 +323,7 @@ export default function App() {
         if (s.rentStates !== undefined) setRentStates(s.rentStates);
         if (s.weeklySurpluses !== undefined) setWeeklySurpluses(s.weeklySurpluses);
         if (s.monthlyArchives !== undefined) setMonthlyArchives(s.monthlyArchives);
+        if (s.invitedEmails !== undefined) setInvitedEmails(s.invitedEmails);
         
         setCloudSyncStatus('success');
         setLastCloudUpdate(new Date().toLocaleTimeString());
@@ -368,7 +380,8 @@ export default function App() {
         glassCount,
         rentStates,
         weeklySurpluses,
-        monthlyArchives
+        monthlyArchives,
+        invitedEmails
       };
       
       const res = await fetch('/api/shared-state', {
@@ -419,12 +432,16 @@ export default function App() {
     rentAverage, izziAverage, luzAverage, aguaAverage, gasAverage, veladorDia, veladorNoche, limpieza,
     services, contributors, shoppingItems, momAdvices, storeRecommendations, medicines,
     bloodPressureReadings, savings, birthdays, contacts, isssteAppointments, glassCount,
-    rentStates, weeklySurpluses, monthlyArchives
+    rentStates, weeklySurpluses, monthlyArchives, invitedEmails
   ]);
 
   // ---------------------------------------------------------------------------
   // SYNCHRONIZATION WITH LOCALSTORAGE
   // ---------------------------------------------------------------------------
+  useEffect(() => {
+    localStorage.setItem('lety_invited_emails', JSON.stringify(invitedEmails));
+  }, [invitedEmails]);
+
   useEffect(() => {
     localStorage.setItem('lety_rent_states_v2', JSON.stringify(rentStates));
   }, [rentStates]);
@@ -1109,6 +1126,116 @@ export default function App() {
 
   if (!currentUser) {
     return <LoginScreen onLoginSuccess={(user) => setCurrentUser(user)} />;
+  }
+
+  const isGuest = invitedEmails.map(e => e.toLowerCase().trim()).includes(currentUser?.email?.toLowerCase().trim() || '');
+
+  if (!(isAdmin || isGuest) && !useDemoMode) {
+    return (
+      <div className="min-h-screen bg-stone-900 text-stone-100 flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative overflow-hidden">
+        {/* Decorative ambient blobs */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-md w-full bg-stone-850 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 space-y-6 text-center animate-feed-in">
+          
+          <div className="w-16 h-16 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+            <Lock className="w-8 h-8 stroke-[2.2]" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight">
+              Acceso Pendiente de Autorización
+            </h2>
+            <p className="text-xs text-stone-400 max-w-sm mx-auto leading-relaxed">
+              Te has registrado con éxito en <strong>Lety App v3</strong>, pero aún no tienes invitación para acceder al panel familiar.
+            </p>
+          </div>
+
+          <div className="p-4 bg-stone-900 border border-stone-800 rounded-2xl text-left space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Tu Correo Registrado</span>
+              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-[9px] font-bold uppercase rounded-full">Pendiente</span>
+            </div>
+            
+            <div className="flex items-center justify-between gap-2 bg-stone-950 border border-stone-800/80 px-3 py-2 rounded-xl">
+              <span className="text-xs font-mono font-bold text-stone-300 select-all break-all pr-2">
+                {currentUser.email}
+              </span>
+              <button
+                onClick={() => {
+                  try {
+                    navigator.clipboard.writeText(currentUser.email);
+                    alert("¡Correo copiado al portapapeles!");
+                  } catch (e) {
+                    // Fallback
+                    const input = document.createElement('input');
+                    input.value = currentUser.email;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                    alert("¡Correo copiado al portapapeles!");
+                  }
+                }}
+                className="p-1 px-2.5 bg-stone-800 hover:bg-stone-700 active:bg-stone-600 text-stone-300 hover:text-white rounded-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer transition shrink-0"
+              >
+                <Copy className="w-3 h-3" />
+                <span>Copiar</span>
+              </button>
+            </div>
+            
+            <p className="text-[10px] text-stone-500 leading-relaxed">
+              Envíale este correo exacto por WhatsApp o mensaje a la administradora de la cuenta (<strong>Ericka</strong>) para que te agregue a la lista de "Invitados Autorizados" de su panel familiar.
+            </p>
+          </div>
+
+          <div className="space-y-2.5 pt-2">
+            <button
+              onClick={() => loadSharedStateFromServer()}
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/15 transition-all"
+            >
+              <RefreshCw className="w-4 h-4 text-white" />
+              <span>Actualizar y Comprobar Acceso</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setUseDemoMode(true);
+              }}
+              className="w-full py-2.5 bg-stone-800 hover:bg-stone-750 active:bg-stone-700 text-stone-300 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+            >
+              <span>Explorar Tablero Local Demo (Sin Sincronizar)</span>
+            </button>
+          </div>
+
+          <div className="border-t border-stone-800/80 pt-4 flex justify-between items-center">
+            <div className="flex items-center gap-1.5 text-left">
+              <div className="w-7 h-7 rounded-lg bg-stone-800 overflow-hidden shrink-0 select-none flex items-center justify-center font-bold text-xs">
+                👤
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-[10px] font-black text-stone-300 truncate max-w-[150px]">{currentUser.name}</p>
+                <p className="text-[8px] font-bold text-stone-500 tracking-wider uppercase">{currentUser.provider === 'google' ? 'Google Auth' : 'Email Auth'}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCurrentUser(null)}
+              className="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/30 text-rose-300 hover:text-rose-200 border border-rose-900/40 rounded-xl text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+
+        </div>
+
+        <div className="text-center font-serif italic text-[10px] text-stone-600 mt-8 relative z-10 max-w-xs">
+          🕊️ "Lety App v3" • Cuidando del hogar, de la familia y manteniendo los recuerdos siempre vivos.
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1979,6 +2106,8 @@ export default function App() {
             shoppingItems={shoppingItems}
             savingsAlloc={savingsAlloc}
             setSavingsAlloc={setSavingsAlloc}
+            invitedEmails={invitedEmails}
+            setInvitedEmails={setInvitedEmails}
           />
         )}
       </main>
